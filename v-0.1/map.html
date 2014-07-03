@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>Zoe Map</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: "Microsoft YaHei";
+        }
+        ul {
+            list-style: none;
+        }
+        h3 {
+            font-size: 14px;
+            text-align: center;
+        }
+        .map {
+            width: 650px;
+            height: 400px;
+        }
+        .map .map_label {
+            line-height: 21px;
+            font-size: 12px;
+        }
+        .map .map_label h3 {
+            height: 40px;
+            line-height: 40px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .map .map_label li {
+            position: relative;
+            z-index: 1;
+            padding: 0 0 5px 37px;
+            zoom: 1;
+        }
+        .map .map_label li b {
+            display: block;
+            margin-left: -37px;
+            width: 36px;
+            float: left;
+            overflow: hidden;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <div class="map" data-zoe="map[lng=113.869761, lat=23.021248]">
+            <h3>东莞汇展众泰   (400-813-4002)</h3>
+            <!-- <div class="map_label" >
+                <h3>东莞汇展众泰</h3>
+                <ul>
+                    <li>
+                        <b>电话：</b>
+                        <em>400-813-4002</em><i class="dg"></i>
+                    </li>
+                    <li>
+                        <b>地址：</b>
+                        <span>东莞寮步镇国际汽车城莞樟路<br />富竹山路段（东风本田旁）</span>
+                    </li>
+                </ul>
+            </div> -->
+        </div>
+    </div>
+<script type="text/javascript" src="zoe/sea.js"></script>
+<script type="text/javascript" src="zoe/sea-config.js"></script>
+</body>
+</html>

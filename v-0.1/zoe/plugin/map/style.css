@@ -1,0 +1,36 @@
+.z_map {
+    position: relative;
+}
+
+.z_map .z_map_view {
+    width: 100%;
+    height: 100%;
+}
+
+.z_map .z_map_asset {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.z_map .z_map_item,
+.z_map .z_map_label {
+    padding: 5px 20px;
+    width: 260px;
+}
+.z_map .z_map_label {
+    z-index: 3;
+    background: #fff;
+}
+.z_map .z_map_label:after {
+    content: '';
+    position: absolute;
+    bottom: -25px;
+    left: 130px;
+    display: block;
+    width: 34px;
+    height: 25px;
+    clear: both;
+    background: url(../../images/icons.png) no-repeat -210px -174px;
+}

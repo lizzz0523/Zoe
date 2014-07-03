@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>Zoe</title>
+    <link rel="stylesheet" href="plugin/marquee/zoe.marquee.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .marquee p {
+            line-height: 24px;
+        }
+
+        .marquee-v {
+            width: 200px;
+            height: 100px;
+        }
+
+        .marquee-h {
+            width: 200px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <div class="marquee marquee-v" zoe="marquee[height=268, vertical]">
+            <p>《Nginx源代码笔记 – 配置变量》Nginx 核心模块和第三方模块提供了很多变量。变量让 Nginx 配置有了更大的灵活性，这篇主要分析一下 Nginx 是如何实现变量特性的。</p>
+        </div>
+        <div class="marquee marquee-h" zoe="marquee[width=1000]">
+            <p>《Nginx源代码笔记 – 配置变量》Nginx 核心模块和第三方模块提供了很多变量。</p>
+        </div>
+    </div>
+    <script type="text/javascript" src="vendor.js"></script>
+    <script type="text/javascript" src="zoe.js"></script>
+    <script type="text/javascript" src="plugin/marquee/zoe.marquee.js"></script>
+</body>
+</html>
