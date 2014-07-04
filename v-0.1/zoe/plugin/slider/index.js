@@ -31,7 +31,7 @@ define(function(require, exports, module) {
 
             className : 'z_slider_item',
 
-            initialize : function() {
+            initialize : function(options) {
                 this.id = options.id || void 0;
             },
 

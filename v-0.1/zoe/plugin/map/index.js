@@ -31,7 +31,7 @@ define(function(require, exports, module) {
         'zoom'       : 13, //地图缩放级别
         'nav'        : false, //是否添加导航控件
         'overview'   : false, //是否添加右下角缩略图
-        'offset'     : { lng : 0, lat : 0.02 }, //中心点偏移量
+        'offset'     : 0.02, //中心点偏移量
         'icon'       : {
             url    : 'http://img4.bitauto.com/dealer/dealersite/20140626/images/map_i24.png',
             size   : { w: 28, h: 35 },
@@ -140,8 +140,8 @@ define(function(require, exports, module) {
                 this.label = label;
             },
 
-            center : function() {
-                return new Point(this.lng, this.lat + 0.02);
+            center : function(offset) {
+                return new Point(this.lng, this.lat + offset);
             }
         }),
 
@@ -155,6 +155,9 @@ define(function(require, exports, module) {
 
             initialize : function(options) {
                 options = _.defaults(options, defaults);
+
+                this.offset = options.offset;
+                this.zoom = options.zoom;
 
                 this.render();
 
@@ -250,10 +253,12 @@ define(function(require, exports, module) {
             moveTo : function(index) {
                 var map = this.map,
                     sites = this.sites,
-                    center = sites[index].center();
+                    zoom = this.zoom,
+                    offset = this.offset,
+                    center = sites[index].center(offset);
 
-                map.centerAndZoom(center, 13);
-                map.disableScrollWheelZoom();
+                map.centerAndZoom(center, zoom);
+                map.enableScrollWheelZoom();
             }
         });
 
