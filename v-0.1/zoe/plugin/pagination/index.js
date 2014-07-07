@@ -15,7 +15,7 @@ define(function(require, exports, module) {
             template : _.template([
 
                 '<% for (var i = 0; i < total; i++) { %>',
-                    '<a href="#page:<%= i + 1 %>"><%= i + 1 %></a>',
+                    '<a href="#page:<%= i %>"><%= i + 1 %></a>',
                 '<% } %>'
 
             ].join('')),
@@ -29,7 +29,7 @@ define(function(require, exports, module) {
                 
                 this.$pages = this.$('a');
 
-                this.totalPage = this.size();
+                this.totalPage = this.size() - 1;
                 this.curPage = -1;
 
                 this.page2Index = (function($pages) {
@@ -65,7 +65,7 @@ define(function(require, exports, module) {
             },
 
             reset : function(initPage) {
-                this.pageTo(this.validPage(initPage || 1));
+                this.pageTo(this.validPage(initPage || 0));
             },
 
             pageTo : function(page) {
@@ -131,6 +131,7 @@ define(function(require, exports, module) {
                     this.goto(hash[1]);
                 }
             }
+            
         });
 
 

@@ -32,7 +32,7 @@ define(function(require, exports, module) {
             className : 'z_slider_item',
 
             initialize : function(options) {
-                this.id = options.id || void 0;
+                this.itemId = options.itemId;
             },
 
             show : function() {
@@ -98,11 +98,11 @@ define(function(require, exports, module) {
                 this.items = this.$items.map(function() {
                     var $elem = $(this),
 
-                        id = $elem.data('id'),
+                        itemId = $elem.attr('id') || void 0,
                         item;
 
                     item = new SliderItem({
-                        id : id
+                        itemId : itemId
                     });
 
                     item.$el.append(this);
@@ -116,10 +116,10 @@ define(function(require, exports, module) {
                 this.maxIndex = this.size() - 1;
 
                 this.id2Index = _.reduce(this.items, function(hash, item, index) {
-                    var id = item.id;
+                    var itemId = item.itemId;
 
-                    if (id != void 0) {
-                        hash[id] = index;
+                    if (itemId != void 0) {
+                        hash[itemId] = index;
                     }
 
                     return hash;
@@ -135,11 +135,11 @@ define(function(require, exports, module) {
                 this.$el.append(this.page.$el);
 
                 this.listenTo(this.page, 'update', function(page) {
-                    this.goto(page - 1);
+                    this.goto(page);
                 });
 
                 this.page.listenTo(this, 'update', function(index) {
-                    this.goto(index + 1);
+                    this.goto(index);
                 });
                 
                 if (!options.page) {
@@ -239,7 +239,7 @@ define(function(require, exports, module) {
                     }
 
                     this.animated = true;
-                    this.transit(type, callback);
+                    this.slide(type, callback);
                 } else {
                     if (_.isFunction(callback)) {
                         callback.call(this);
@@ -250,7 +250,7 @@ define(function(require, exports, module) {
                 this.trigger('update', this.curIndex);
             },
 
-            transit : function(type, callback) {
+            slide : function(type, callback) {
                 var $slider = this.$slider,
 
                     init = {},
@@ -375,10 +375,6 @@ define(function(require, exports, module) {
                 this.slideBuffer(index, true);
             },
 
-            size : function() {
-                return this.items.length;
-            },
-
             show : function() {
                 this.$el.show();
             },
@@ -401,6 +397,10 @@ define(function(require, exports, module) {
             play : function() {
                 if (!this.fxAuto || this.fxAuto.locked) return;
                 this.next(); 
+            },
+
+            size : function() {
+                return this.items.length;
             },
 
             clickNav : function(event) {

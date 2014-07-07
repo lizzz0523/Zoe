@@ -1,0 +1,16 @@
+.z_video {
+    position: relative;
+}
+
+.z_video .z_video_view {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.z_video .z_video_tape {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}

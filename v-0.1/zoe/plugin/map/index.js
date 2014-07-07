@@ -9,20 +9,19 @@ define(function(require, exports, module) {
 
         B = require('backbone'),
         
-        utils = require('tool/utils'),
-        BMap = require('./lib/bmap'),
+        bmap = require('tool/bmap'),
 
-        Map = BMap.Map,
-        Point = BMap.Point,
-        Size = BMap.Size,
+        Map = bmap.Map,
+        Point = bmap.Point,
+        Size = bmap.Size,
 
-        Icon = BMap.Icon,
-        Marker = BMap.Marker,
-        Label = BMap.Label,
+        Icon = bmap.Icon,
+        Marker = bmap.Marker,
+        Label = bmap.Label,
 
-        NavigationControl = BMap.NavigationControl,
-        MapTypeControl = BMap.MapTypeControl,
-        OverviewMapControl = BMap.OverviewMapControl;
+        NavigationControl = bmap.NavigationControl,
+        MapTypeControl = bmap.MapTypeControl,
+        OverviewMapControl = bmap.OverviewMapControl;
 
 
     var defaults = {
@@ -55,7 +54,7 @@ define(function(require, exports, module) {
 
             tagName : 'div',
 
-            className : 'z_map_item',
+            className : 'z_map_site',
 
             labelTmpl : _.template([
 
@@ -66,7 +65,8 @@ define(function(require, exports, module) {
             ].join('')),
 
             initialize : function(options) {
-                this.id = options.id || void 0;
+                this.siteId = options.siteId,
+                this.map = options.map,
                 this.lng = options.lng || 0,
                 this.lat = options.lat || 0;
 
@@ -79,11 +79,13 @@ define(function(require, exports, module) {
                     width = $elem.outerWidth(true),
                     height = $elem.outerHeight(true);
 
-                this.label.setOffset(new Size(-width / 2 + 20, -height - 50));
+                this.label.setOffset(new Size(-width / 2 + 18, -height - 45));
             },
 
-            initMarker : function(options, map) {
+            initMarker : function(options) {
                 var center = this.position,
+                    map = this.map,
+
                     iconSize,
                     iconAnchor,
                     iconOffset,
@@ -117,8 +119,10 @@ define(function(require, exports, module) {
                 this.marker = marker;
             },
 
-            initLabel : function(options, map) {
+            initLabel : function(options) {
                 var center = this.position,
+                    map = this.map,
+
                     labelContent,
                     labelOffset,
                     label;
@@ -140,12 +144,19 @@ define(function(require, exports, module) {
                 this.label = label;
             },
 
-            center : function(offset) {
-                return new Point(this.lng, this.lat + offset);
+            center : function(offset, zoom) {
+                var map = this.map,
+                    lng = this.lng,
+                    lat = this.lat + offset;
+
+                map.centerAndZoom(new Point(lng, lat), zoom);
+                map.enableScrollWheelZoom();
             }
+
         }),
 
         MapView = B.View.extend({
+
             template : [
 
                 '<div class="z_map_view"></div>',
@@ -185,33 +196,48 @@ define(function(require, exports, module) {
                     $items.each(function() {
                         var $item = $(this),
 
-                            id = $item.data('id'),
                             lng = $item.data('lng') || options.lng,
                             lat = $item.data('lat') || options.lat,
+
+                            siteId = $item.attr('id') || void 0,
                             site;
 
                         site = new MapSite({
-                            id  : id,
+                            map : map,
                             lng : lng,
-                            lat : lat
+                            lat : lat,
+                            siteId : siteId
                         });
 
                         site.$el.append($item);
-                        site.initMarker(options.icon, map);
-                        site.initLabel(options.label, map);
+                        site.initMarker(options.icon);
+                        site.initLabel(options.label);
 
                         sites.push(site);
                     });
+
+                    if (!sites.length) {
+                        sites.push(new MapSite({
+                            lng : options.lng,
+                            lat : options.lat,
+                        }));
+
+                        sites[0].initMarker(options.icon);
+                    }
 
                     return sites;
 
                 })(this.$items, this.map);
 
-                this.id2index = _.reduce(this.sites, function(hash, site, index) {  
-                    var id = site.id;
+                this.curIndex = -1;
+                this.minIndex = 0;
+                this.maxIndex = this.size() - 1;
 
-                    if (id != void 0) {
-                        hash[id] = index;
+                this.id2index = _.reduce(this.sites, function(hash, site, index) {  
+                    var siteId = site.siteId;
+
+                    if (siteId != void 0) {
+                        hash[siteId] = index;
                     }
 
                     return hash;
@@ -236,8 +262,6 @@ define(function(require, exports, module) {
 
             reset : function(initIndex) {
                 var $asset = this.$asset,
-
-                    map = this.map,
                     sites = this.sites;
 
                 _.each(sites, function(site) {
@@ -247,19 +271,54 @@ define(function(require, exports, module) {
 
                 $asset.hide();
 
-                this.moveTo(initIndex || 0);
+                this.zoomTo(this.validIndex(initIndex || this.minIndex));
             },
 
-            moveTo : function(index) {
-                var map = this.map,
-                    sites = this.sites,
-                    zoom = this.zoom,
+            zoomTo : function(index) {
+                var zoom = this.zoom,
                     offset = this.offset,
-                    center = sites[index].center(offset);
+                    sites = this.sites;
 
-                map.centerAndZoom(center, zoom);
-                map.enableScrollWheelZoom();
+                sites[index].center(offset, zoom);
+            },
+
+            validIndex : function(index) {
+                var minIndex = this.minIndex,
+                    maxIndex = this.maxIndex;
+
+                if (index === 'next') {
+                    index = this.curIndex + 1;
+                }
+
+                if (index === 'prev') {
+                    index = this.curIndex - 1;
+                }
+
+                if (_.isString(index)) {
+                    index = this.id2Index[index];
+                }
+
+                if (_.isFinite(index)) {
+                    index = +index;
+
+                    if (index > maxIndex) {
+                        index = minIndex;
+                    }
+
+                    if (index < minIndex) {
+                        index = maxIndex;
+                    }
+                } else {
+                    index = minIndex;
+                }
+
+                return index;
+            },
+
+            size : function() {
+                return this.sites.length;
             }
+            
         });
 
 

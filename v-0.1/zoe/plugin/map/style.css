@@ -14,7 +14,7 @@
     width: 100%;
     height: 100%;
 }
-.z_map .z_map_item,
+.z_map .z_map_site,
 .z_map .z_map_label {
     padding: 5px 20px;
     width: 260px;
@@ -32,5 +32,5 @@
     width: 34px;
     height: 25px;
     clear: both;
-    background: url(../../images/icons.png) no-repeat -210px -174px;
+    background: url(images/tail.png) no-repeat left top;
 }

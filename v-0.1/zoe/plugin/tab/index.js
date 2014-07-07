@@ -104,6 +104,7 @@ define(function(require, exports, module) {
                     this.goto(hash[1]);
                 }
             }
+            
         });
 
 
