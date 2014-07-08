@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>Zoe Slider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .panel {
+            width: 206px;
+            height: 159px;
+            overflow: hidden;
+        }
+
+        .panel img {
+            display: block;
+            width: 206px;
+            height: 159px;
+        }
+
+        .panel p {
+            position: relative;
+            margin-top: -159px;
+            width: 100%;
+            line-height: 159px;
+            float: left;
+            color: white;
+            background-color: rgba(0,0,0,0.5);
+            font-family: "Microsoft YaHei";
+            font-size: 40px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .panel .panel_item {
+            width: 206px;
+            height: 159px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas">
+        <div class="panel" data-zoe="panel[current=0]" data-id="p1">
+            <div class="panel_item">
+                <img src="images/slider/4.jpg" />
+                <p>1</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/5.jpg" />
+                <p>2</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/6.jpg" />
+                <p>3</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/7.jpg" />
+                <p>4</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/8.jpg" />
+                <p>5</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/9.jpg" />
+                <p>6</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/10.jpg" />
+                <p>7</p>
+            </div>
+            <div class="panel_item">
+                <img src="images/slider/11.jpg" />
+                <p>8</p>
+            </div>
+        </div>
+    </div>
+<script type="text/javascript" src="zoe/sea.js"></script>
+<script type="text/javascript" src="zoe/sea-config.js"></script>
+</body>
+</html>

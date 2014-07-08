@@ -127,7 +127,6 @@ define(function(require, exports, module) {
 
                 // 初始化slider page
                 this.page = new Pagination({
-                    default : true,
                     total : this.size(),
                     current : options.current && (options.current + 1)
                 });

@@ -8,38 +8,74 @@ define(function(require, exports, module) {
     var _rdata = /^([^\[]+)(\[[^\]]*\])$/,
         _path = 'plugin/{s}/index.js',
 
-        views = utils.data(window, 'zoe');
+        ready = 0,
+        zoe = function(callback) {
+            zoe.on('ready', callback);
+        };
 
+        
+    $.extend(zoe, {
+        event : utils.Event(zoe),
 
-    if (!views) {
-        views = {};
-    }
+        views : {},
 
-    $('[data-zoe]').each(function(index, elem) {
-        var $elem = $(elem),
-            
-            id = $elem.data('id'),
-            data,
-            opts;
+        on : function(name, callback) {
+            zoe.event.on(name, callback);
+        },
 
-        if (!id) {
-            $elem.data('id', id = 'zoe-' + utils.guid());
-        }
-          
-        if (!views[id]) {
-            data = $elem.data('zoe').match(_rdata);
+        off : function(name, callback) {
+            zoe.event.off(name, callback);
+        },
 
-            if (data) {
-                opts = utils.parseParam(data[2]);
-                opts.el = elem;
+        emit : function(name) {
+            zoe.event.emit(name);
+        },
 
-                require.async(_path.replace(/\{s\}/g, data[1]), function(View) {
-                    views[id] = new View(opts);
-                });
+        find : function(viewId) {
+            if (zoe.views[viewId]) {
+                return zoe.views[viewId];
+            } else {
+                return null;
             }
         }
     });
 
-    utils.data(window, 'zoe', views);
+
+    $('[data-zoe]').each(function(index, elem) {
+        var $elem = $(elem),
+            
+            viewId = $elem.data('id'),
+            viewData,
+            options;
+
+        if (!viewId) {
+            $elem.data('id', viewId = 'zoe-' + utils.guid());
+        }
+          
+        if (!zoe.views[viewId]) {
+            viewData = $elem.data('zoe').match(_rdata);
+
+            if (viewData) {
+                options = utils.parseParam(viewData[2]);
+                options.el = elem;
+
+                ready++;
+                require.async(_path.replace(/\{s\}/g, viewData[1]), function(View) {
+                    zoe.views[viewId] = new View(options);
+
+                    if (--ready == 0) {
+                        zoe.emit('ready');
+                    }
+                });
+
+                if (ready == 0) {
+                    zoe.emit('ready');
+                }
+            }
+        }
+    });
+
+
+    module.exports = zoe;
 
 });
