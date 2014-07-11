@@ -47,7 +47,7 @@ define(function(require, exports, module) {
                 this.$items = $items;
             },
 
-            reset : function(initTab) {
+            reset : function() {
                 var $elem = this.$el,
                     $items = this.$items,
 
@@ -97,16 +97,16 @@ define(function(require, exports, module) {
                     cache = {};
 
                 _.each($tabs, function(tab) {
-                    var hash = tab.href;
+                    var hash = tab.getAttribute('href', 2);
                     
                     hash = utils.parseHash(hash);
                     hash = hash.match(pattern);
 
-                    if (hash) {
-                        if (cache[hash[1]]) {
-                            cache[hash[1]].push(tab);
+                    if (hash && (hash = hash.pop())) {
+                        if (cache[hash]) {
+                            cache[hash].push(tab);
                         } else {
-                            cache[hash[1]] = [tab];
+                            cache[hash] = [tab];
                         }
                     }
                 });
@@ -139,20 +139,24 @@ define(function(require, exports, module) {
                 this.$el.hide();
             },
 
+            current : function() {
+                return this.curTab;
+            },
+
             clickTab : function(event) {
                 var options = this.options,
                     pattern = options.pattern,
 
                     target = event.currentTarget,
-                    hash = target.href;
+                    hash = target.getAttribute('href', 2);
 
                 event && event.preventDefault();
 
                 hash = utils.parseHash(hash);
                 hash = hash.match(pattern);
 
-                if (hash) {
-                    this.active(hash[1]);
+                if (hash && (hash = hash.pop())) {
+                    this.active(hash);
                 }
             }
             

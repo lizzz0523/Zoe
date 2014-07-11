@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
 
-    var utils = require('tool/utils'),
+    var queue = require('tool/queue'),
 
         $ = require('jquery'),
         _ = require('underscore'),
@@ -15,7 +15,6 @@ define(function(require, exports, module) {
 
 
     var PanelItem = View.extend({
-
             tagName : 'div',
 
             className : 'z_panel_item',
@@ -36,11 +35,9 @@ define(function(require, exports, module) {
             hide : function() {
                 this.$el.hide();
             }
-
         }),
 
         Panel = View.extend({
-
             template : [
 
                 '<div class="z_panel_view"></div>',
@@ -52,7 +49,7 @@ define(function(require, exports, module) {
 
                 // 这里的队列是用于处理效果的触发
                 // 以免出现漏帧
-                this.queue = utils.queue(this);
+                this.queue = queue(this);
                 this.visible = true;
                 this.items = [];
                 this.controls = [];
@@ -69,8 +66,8 @@ define(function(require, exports, module) {
 
             render : function() {
                 var $elem = this.$el,
-
                     $items = $elem.children(),
+                    
                     $view;
 
                 // 从dom中取出原有内容
@@ -181,17 +178,22 @@ define(function(require, exports, module) {
                     index = +index;
 
                     if (index > maxIndex) {
-                        index = minIndex;
+                        index = maxIndex;
                     }
 
                     if (index < minIndex) {
-                        index = maxIndex;
+                        index = minIndex;
                     }
                 } else {
                     index = minIndex;
                 }
 
                 return index;
+            },
+
+            updateIndex : function(index) {
+                this.curIndex = index;
+                this.trigger('update', this.curIndex);
             },
 
             show : function(index) {
@@ -224,7 +226,7 @@ define(function(require, exports, module) {
                     items[index].show();
                 }
 
-                this.update(index);
+                this.updateIndex(index);
             },
 
             hide : function() {
@@ -239,11 +241,6 @@ define(function(require, exports, module) {
                         items[curIndex].hide();
                     }
                 }
-            },
-
-            update : function(index) {
-                this.curIndex = index;
-                this.trigger('update', this.curIndex);
             },
 
             size : function() {

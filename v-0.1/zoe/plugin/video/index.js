@@ -4,8 +4,7 @@ define(function(require, exports, module) {
     require('./style.css');
 
 
-    var utils = require('tool/utils'),
-        swf = require('tool/swf'),
+    var swf = require('tool/swf'),
 
         $ = require('jquery'),
         _ = require('underscore'),
@@ -93,6 +92,7 @@ define(function(require, exports, module) {
                 var video = this.video,
                     vendor = this.vendor;
 
+                // 获取视频网站播放器的设置
                 if (_.isString(vendor)) {
                     vendor = special[vendor] || special[defaults.vendor];
                 }
@@ -121,12 +121,12 @@ define(function(require, exports, module) {
             reset : function() {
                 var $elem = this.$el,
 
+                    width = $elem.width(),
+                    height = $elem.height(),
+
                     vendor = this.vendor,
                     video = this.video,
                     place = VideoTape.ID_PREFIX + video,
-
-                    width = $elem.width(),
-                    height = $elem.height(),
 
                     params = {
                         quality : 'high',
@@ -154,8 +154,12 @@ define(function(require, exports, module) {
                 swf.embedSWF(player, place, width, height, '9.0.0', 'swf/expressInstall.swf', flashvars, params, {});
             },
 
-            show : function() {
-                this.$el.fadeIn(this.speed);
+            show : function(silent) {
+                if (silent) {
+                    this.$el.show();
+                } else {
+                    this.$el.fadeIn(this.speed);
+                }
             },
 
             hide : function() {
@@ -183,6 +187,7 @@ define(function(require, exports, module) {
             render : function() {
                 var $elem = this.$el,
                     $items = $elem.children(),
+
                     $view;
 
                 $items.detach();
@@ -196,8 +201,6 @@ define(function(require, exports, module) {
                 this.$inner = $view;
 
                 this.$view = $view;
-
-                return this;
             },
 
             reset : function() {
@@ -207,11 +210,11 @@ define(function(require, exports, module) {
 
                     options = this.options,
                     current = options.current,
-                    remote = options.remote,
-                    template = options.template,
                     speed = options.speed,
                     video = options.video,
-                    vendor = options.vendor;
+                    vendor = options.vendor,
+                    remote = options.remote,
+                    template = options.template;
 
                 if (remote && template && _.isFunction(template)) {
                     if (_.isArray(remote)) {
@@ -224,7 +227,7 @@ define(function(require, exports, module) {
                                 speed : data.speed || speed,
                                 video : data.video || video,
                                 vendor : data.vendor || vendor
-                            }), true);
+                            }));
 
                             item.reset();
                         }, this);
@@ -239,7 +242,7 @@ define(function(require, exports, module) {
                                 speed : data.speed || speed,
                                 video : data.video || video,
                                 vendor : data.vendor || vendor
-                            }), true);
+                            }));
 
                             item.reset();
                         }, this);
@@ -249,23 +252,15 @@ define(function(require, exports, module) {
                         var $elem = $(elem),
                             $link = elem.nodeName.match(/a/i) ? $elem : $elem.find('a'),
                             
-                            speed = $elem.data('speed'),
-                            video = $elem.data('video'),
-                            vendor = $elem.data('vendor'),
-
                             itemId = elem.id || void 0,
                             item;
 
-                        if (!video && $link.length) {
-                            video = $link.attr('href');
-                        }
-
                         this.addItem(item = new VideoTape({
                             itemId : itemId,
-                            speed : speed || options.speed,
-                            video : video || options.video,
-                            vendor : vendor || options.vendor
-                        }), true);
+                            speed : $elem.data('speed') || speed,
+                            video : $elem.data('video') || $link.attr('href') || video,
+                            vendor : $elem.data('vendor') || vendor
+                        }));
 
                         item.reset();
                     }, this);
@@ -273,9 +268,9 @@ define(function(require, exports, module) {
 
                 if (!this.size()) {
                     this.addItem(item = new VideoTape({
-                        speed : options.speed,
-                        vendor : options.vendor,
-                        video : options.video
+                        speed : speed,
+                        vendor : vendor,
+                        video : video
                     }));
 
                     item.reset();

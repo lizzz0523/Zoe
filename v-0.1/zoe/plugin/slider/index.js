@@ -4,9 +4,7 @@ define(function(require, exports, module) {
     require('./style.css');
 
 
-    var utils = require('tool/utils'),
-
-        $ = require('jquery'),
+    var $ = require('jquery'),
         _ = require('underscore'),
 
         View = require('backbone').View,
@@ -126,6 +124,7 @@ define(function(require, exports, module) {
             render : function() {
                 var $elem = this.$el,
                     $items = $elem.children(),
+                    
                     $view,
                     $slider,
 
@@ -245,58 +244,89 @@ define(function(require, exports, module) {
                 return index;
             },
 
+            updateIndex : function(index) {
+                Panel.prototype.updateIndex.call(this, index);
+
+                if (this.page) {
+                    this.page.active(this.curIndex);
+                }
+            },
+
+            show : function(index) {
+                var items = this.items,
+                    curIndex = this.curIndex;
+
+                if (!this.visible) {
+                    this.$el.show();
+                    this.visible = true;
+
+                    if (curIndex != -1) {
+                        items[curIndex].show();
+                    }
+                }
+
+                if (index == void 0) return;
+
+                index = this.validIndex(index);
+                if (curIndex == index) return;
+
+                this.slideBuffer(index, String(index).match(/^next|prev$/) && index == 'next');
+            },
+
             slideBuffer : function(index, next) {
                 var items = this.items,
                     curIndex = this.curIndex,
-
                     animated = this.animated,
-                    queue = this.queue,
-                    size = queue.size('slide');
 
-                queue.clear('slide');
+                    queue = this.queue,
+                    qname = 'slide',
+                    size = queue.size(qname);
+
+                queue.clear(qname);
 
                 if (curIndex == -1) {
-                    queue.add('slide', function(){
+                    // curIndex == -1
+                    // 说明控件仍未初始化
+
+                    queue.add(qname, function(){
                         _.defer(function(){
-                            queue.next('slide');
+                            queue.next(qname);
                         });
                     });
 
-                    queue.add('slide', function() {
-                        // curIndex == -1
-                        // 说明控件仍未初始化
+                    queue.add(qname, function() {
                         _.each(items, function(item) {
                             item.hide();
                         });
                         items[index].show();
 
-                        this.update(index);
+                        this.updateIndex(index);
 
-                        queue.next('slide');
+                        queue.next(qname);
                     });
                 } else {
-                    queue.add('slide', function(){
+                    queue.add(qname, function(){
                         // 加一个160毫秒的delay
                         // 可以减缓响应速度
                         // 感觉更真实
                         _.delay(function(){
-                            queue.next('slide');
+                            queue.next(qname);
                         }, 160);
                     });
 
-                    queue.add('slide', function() {
+                    queue.add(qname, function() {
                         this.animated = true;
                         this.slideTo(index, next, function() {
                             this.animated = false;
-                            queue.next('slide');
+                            queue.next(qname);
                         });
                         
-                        this.update(index);
+                        this.updateIndex(index);
                     });
                 }
 
                 if (!size && !animated) {
-                    queue.next('slide');
+                    queue.next(qname);
                 }
 
                 // 这里不使用debounce的来完成响应延迟的主要原因是
@@ -380,40 +410,6 @@ define(function(require, exports, module) {
                 }
 
                 $slider.css(init).animate(dest, this.speed, _.bind(callback, this));
-            },
-
-            show : function(index) {
-                var items = this.items,
-                    curIndex = this.curIndex,
-                    next;
-
-                if (!this.visible) {
-                    this.$el.show();
-                    this.visible = true;
-
-                    if (curIndex != -1) {
-                        items[curIndex].show();
-                    }
-                }
-
-                if (index == void 0) return;
-
-                if (_.isString(index) && index.match(/^next|prev$/)) {
-                    next = index == 'next';
-                }
-
-                index = this.validIndex(index);
-                if (curIndex == index) return;
-
-                this.slideBuffer(index, next);
-            },
-
-            update : function(index) {
-                Panel.prototype.update.call(this, index);
-
-                if (this.page) {
-                    this.page.active(this.curIndex);
-                }
             },
 
             next : function() {

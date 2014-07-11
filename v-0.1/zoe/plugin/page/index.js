@@ -9,6 +9,7 @@ define(function(require, exports, module) {
 
 
     var defaults = {
+            'repeat'   : false,
             'current'  : 0,
             'total'    : 0,
             'pattern'  : /^page:([\d\w][\d\w\s]*)$/,
@@ -92,20 +93,20 @@ define(function(require, exports, module) {
 
             active : function(page) {
                 var $pages = this.$pages,
+
+                    options = this.options,
+                    repeat = this.repeat,
+
                     curPage = this.curPage;
 
                 page = this.validPage(page);
-                if (curPage == page) return;
+                if (!repeat && curPage == page) return;
 
                 $pages.removeClass('active');
                 $pages.eq(page).addClass('active');
 
                 this.curPage = page;
                 this.trigger('update', this.curPage);
-            },
-
-            total : function() {
-                return this.$pages.length;
             },
 
             show : function() {
@@ -116,20 +117,28 @@ define(function(require, exports, module) {
                 this.$el.hide();
             },
 
+            total : function() {
+                return this.$pages.length;
+            },
+
+            current : function() {
+                return this.curPage;
+            },
+
             clickPage : function(event) {
                 var options = this.options,
                     pattern = options.pattern,
 
                     target = event.currentTarget,
-                    hash = target.href;
+                    hash = target.getAttribute('href', 2);
 
                 event && event.preventDefault();
 
                 hash = utils.parseHash(hash);
                 hash = hash.match(pattern);
 
-                if (hash) {
-                    this.active(hash[1]);
+                if (hash && (hash = hash.pop())) {
+                    this.active(hash);
                 }
             }
             
