@@ -8,7 +8,6 @@ var _rencode = /[&<>"']/g,
     _rtrim = /^\s+|\s+$/g,
     _rcamelCase = /-([\da-z])/gi,
     _rquery = /^[^?]*\?(.+)$/,
-    _rparam = /^[^\[]*\[([^\]]+)\]/,
     _rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
     _rjsonchars = /^[\],:{}\s]*$/,
     _rjsonescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
@@ -59,36 +58,6 @@ var _slice = function(arr, start, end) {
         }
 
         return obj;
-    },
-
-    _trim = function(str) {
-        if(str == null) return '';
-
-        return String(str).replace(_rtrim, '');
-    },
-
-    _encode  = function(str) {
-        if(str == null) return '';
-
-        return String(str).replace(_rencode, function(match) {
-            return _mencode[match];
-        });
-    },
-
-    _decode = function(str) {
-        if (str == null) return '';
-
-        return String(str).replace(_rdecode, function(match) {
-            return _mdecode[match];
-        });
-    },
-
-    _escape = function(str) {
-        if (str == null) return '';
-
-        return String(str).replace(_rescape, function(match) {
-            return _mescape[match] || '\\u' + ('0000' + match.charCodeAt(0).toString(16)).slice(-4);
-        });
     };
 
 
@@ -109,43 +78,39 @@ var utils = {
 
 
 _.extend(utils, {
-    parseParam : function(str, separator) {
-        var param = String(str).match(_rparam),
-            key,
-            value;
+    trim : function(str) {
+        if(str == null) return '';
 
-        if (param == null) return {};
-
-        param = param.pop();
-        separator = separator || ',';
-
-        return _.reduce(param.split(separator), function(hash, pair) {
-            if (pair.length == 0) return hash;
-
-            pair = _escape(pair).split('=');
-
-            key = pair.shift();
-            key = _trim(key);
-
-            value = pair.join('=');
-            value = _trim(value);
-
-            if (value.length != 0) {
-                // 内部转换字符串到对应的值
-                if (_.isFinite(value)) {
-                    value = +value;
-                } else {
-                    value = value.match(/^true$|^false$/) ? value == 'true' : value;
-                }
-            } else {
-                // 如果字符串为空，默认转换成true
-                value = true;
-            }
-
-            return _push(hash, key, value);
-        }, {});
+        return String(str).replace(_rtrim, '');
     },
 
+    encode : function(str) {
+        if(str == null) return '';
+
+        return String(str).replace(_rencode, function(match) {
+            return _mencode[match];
+        });
+    },
+
+    decode : function(str) {
+        if (str == null) return '';
+
+        return String(str).replace(_rdecode, function(match) {
+            return _mdecode[match];
+        });
+    },
+
+    escape : function(str) {
+        if (str == null) return '';
+
+        return String(str).replace(_rescape, function(match) {
+            return _mescape[match] || '\\u' + ('0000' + match.charCodeAt(0).toString(16)).slice(-4);
+        });
+    }
+});
+
+
+_.extend(utils, {
     parseQuery : function(str, separator) {
         var query = String(str).match(_rquery),
             key,
@@ -448,7 +413,7 @@ _.extend(utils, {
 
 // 事件系统
 _.extend(utils, {
-    Event : (function() {
+    event : (function() {
 
         var settings = {
                 CACHE : 'events'
@@ -549,7 +514,7 @@ _.extend(utils, {
 
 // 列队系统
 _.extend(utils, {
-    Queue : (function() {
+    queue : (function() {
 
         var settings = {
                 CACHE : 'queues'
@@ -592,11 +557,20 @@ _.extend(utils, {
                 }
             },
 
-            clear : function(name) {
+            clear : function(name, size) {
                 var queues = utils.data(this, settings.CACHE),
                     players = queues[name];
 
-                players && (delete queues[name]);
+                size = size || 0;
+
+                if (!players) return;
+                players = _slice(players, 0, size)
+
+                if (!players.length) {
+                    delete queues[name];
+                } else {
+                    queues[name] = players;
+                }
             },
 
             size : function(name) {
@@ -627,7 +601,7 @@ _.extend(utils, {
 
 // 有限状态机系统
 _.extend(utils, {
-    Fsm : (function(settings) {
+    fsm : (function(settings) {
 
         var settings = {
                 ASYN_QUEUEU : 'transit'

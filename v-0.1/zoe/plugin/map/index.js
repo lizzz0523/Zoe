@@ -4,11 +4,7 @@ define(function(require, exports, module) {
     require('./style.css');
 
 
-    var $ = require('jquery'),
-        _ = require('underscore'),
-
-        B = require('backbone'),
-        
+    var utils = require('tool/utils'),
         bmap = require('tool/bmap'),
 
         Map = bmap.Map,
@@ -21,7 +17,14 @@ define(function(require, exports, module) {
 
         NavigationControl = bmap.NavigationControl,
         MapTypeControl = bmap.MapTypeControl,
-        OverviewMapControl = bmap.OverviewMapControl;
+        OverviewMapControl = bmap.OverviewMapControl,
+
+        $ = require('jquery'),
+        _ = require('underscore'),
+
+        View = require('backbone').View,
+
+        Panel = require('plugin/panel/index');
 
 
     var defaults = {
@@ -52,8 +55,6 @@ define(function(require, exports, module) {
 
     var MapSite = B.View.extend({
 
-            tagName : 'div',
-
             className : 'z_map_site',
 
             labelTmpl : _.template([
@@ -65,11 +66,12 @@ define(function(require, exports, module) {
             ].join('')),
 
             initialize : function(options) {
-                this.siteId = options.siteId,
+                this.itemId = options.itemId,
+
                 this.map = options.map,
+
                 this.lng = options.lng || 0,
                 this.lat = options.lat || 0;
-
                 this.position = new Point(this.lng, this.lat);
             },
 
@@ -153,6 +155,22 @@ define(function(require, exports, module) {
                 map.enableScrollWheelZoom();
             }
 
+        }),
+
+        MapView = Panel.extend({
+
+            template : [
+
+                '<div class="z_map_view"></div>',
+                '<div class="z_map_asset"></div>'
+
+            ].join(''),
+
+            initialize : function(options) {
+                options = _.defaults(options, defaults);
+
+                Panel.prototype.initialize.call(this, options);
+            }
         }),
 
         MapView = B.View.extend({
@@ -248,16 +266,23 @@ define(function(require, exports, module) {
 
             render : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $items = $elem.children(),
+                    $view，
+                    $asset;
 
                 $items.detach();
 
                 $elem.html(this.template);
                 $elem.addClass('z_map');
 
-                this.$items = $items;
+                $view = this.$('.z_map_view');
+                $asset = this.$('.z_map_asset');
 
-                return this;
+                this.$items = $items;
+                this.$inner = $asset;
+
+                this.$view = $view;
+                this.$asset = $asset;
             },
 
             reset : function(initIndex) {

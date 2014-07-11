@@ -4,16 +4,22 @@ define(function(require, exports, module) {
     require('./style.css');
 
 
-    var $ = require('jquery'),
+    var utils = require('tool/utils'),
+        swf = require('tool/swf'),
+
+        $ = require('jquery'),
         _ = require('underscore'),
 
-        B = require('backbone'),
+        View = require('backbone').View,
         
-        swf = require('tool/swf');
+        Panel = require('plugin/panel/index');
 
 
     var defaults = {
-            'vendor' : 'letv'
+            'vendor'  : 'letv',
+
+            'speed'   : 300,
+            'current' : 0
         },
 
         special = {
@@ -25,7 +31,7 @@ define(function(require, exports, module) {
                         pver : 'website'
                     };
                 },
-                rvideo : /\/([^\/]+).html$/gi
+                rvideo : /^http:\/\/\S+\/([^\/]+).html$/gi
             },
 
             'bita' : {
@@ -35,7 +41,7 @@ define(function(require, exports, module) {
                         file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayVideoInfo?id=' + id
                     }
                 },
-                rvideo : /\/([^\/]+).html$/gi
+                rvideo : /^http:\/\/\S+\/([^\/]+).html$/gi
             },
 
             'youku' : {
@@ -46,7 +52,7 @@ define(function(require, exports, module) {
                     isAutoPlay : false,
                     noCookie : 0
                 },
-                rvideo : /\/id_([^\/]+).html$/gi
+                rvideo : /^http:\/\/\S+\/id_([^\/]+).html$/gi
             },
 
             'tudou' : {
@@ -58,42 +64,67 @@ define(function(require, exports, module) {
                     widthAD : false,
                     noCookie : 0
                 },
-                rvideo : /\/([^\/]+).html$/gi
+                rvideo : /^http:\/\/\S+\/([^\/]+).html$/gi
             }
         };
 
 
-    var VideoTape = B.View.extend({
-
-            tagName : 'div',
+    var VideoTape = View.extend({
 
             className : 'z_video_tape',
 
+            template : _.template([
+
+                '<object id="<%= place %>"></object>'
+
+            ].join('')),
+
             initialize : function(options) {
-                this.tapeId = options.tapeId;
+                this.itemId = options.itemId;
+                this.speed = options.speed;
                 this.video = options.video;
                 this.vendor = options.vendor;
 
+                this.parse();
                 this.render();
+            },
+
+            parse : function() {
+                var video = this.video,
+                    vendor = this.vendor;
+
+                if (_.isString(vendor)) {
+                    vendor = special[vendor] || special[defaults.vendor];
+                }
+
+                if (_.isString(video) && video.match(vendor.rvideo)) {
+                    video = video.replace(vendor.rvideo, function(all, video) {
+                        return video;
+                    });
+                }
+
+                this.video = video;
+                this.vendor = vendor;
             },
 
             render : function() {
                 var $elem = this.$el,
 
                     video = this.video,
-                    placeHolder;
+                    place = VideoTape.ID_PREFIX + video;
 
-                placeHolder = document.createElement('div');
-                placeHolder.id = VideoTape.ID_PREFIX + video;
-
-                $elem.append(placeHolder);
+                $elem.html(this.template({
+                    place : place
+                }));
             },
 
             reset : function() {
                 var $elem = this.$el,
 
-                    video = this.video,
                     vendor = this.vendor,
+                    video = this.video,
+                    place = VideoTape.ID_PREFIX + video,
+
                     width = $elem.width(),
                     height = $elem.height(),
 
@@ -120,11 +151,11 @@ define(function(require, exports, module) {
                     flashvars = vendor.vars;
                 }
 
-                swf.embedSWF(player, VideoTape.ID_PREFIX + video, width, height, '9.0.0', 'swf/expressInstall.swf', flashvars, params, {});
+                swf.embedSWF(player, place, width, height, '9.0.0', 'swf/expressInstall.swf', flashvars, params, {});
             },
 
             show : function() {
-                this.$el.fadeIn(500);
+                this.$el.fadeIn(this.speed);
             },
 
             hide : function() {
@@ -135,7 +166,7 @@ define(function(require, exports, module) {
             ID_PREFIX : 'z_video_'
         }),
 
-        Video = B.View.extend({
+        Video = Panel.extend({
 
             template : [
 
@@ -146,139 +177,112 @@ define(function(require, exports, module) {
             initialize : function(options) {
                 options = _.defaults(options, defaults);
 
-                if (_.isString(options.vendor)) {
-                    options.vendor = special[options.vendor] || special[defaults.vendor];
-                }
-
-                this.render();
-
-                this.$view = this.$('.z_video_view');
-
-                this.tapes = (function($items) {
-
-                    var tapes = [];
-
-                    $items.each(function() {
-                        var $item = $(this),
-                            $link = this.nodeNode.toLowerCase() == 'a' ? $item : $item.find('a'),
-
-                            vendor = $item.data('vendor') || options.vendor,
-                            video = $item.data('video'),
-
-                            tapeId = $item.attr('id') || void 0,
-                            tape;
-
-                        if (_.isString(vendor)) {
-                            vendor = special[vendor] || special[defaults.vendor];
-                        }
-
-                        if (!video) {
-                            video = $link.attr('href');
-                            video = video
-                            ? video.replace(vendor.rvideo, function(all, video){
-                                return video;
-                            })
-                            : options.video;
-                        }
-
-                        tape = new VideoTape({
-                            vendor : vendor,
-                            video : video,
-                            tapeId : tapeId
-                        });
-
-                        tapes.push(tape);
-                    });
-
-                    if (!tapes.length) {
-                        tapes.push(new VideoTape({
-                            vendor : options.vendor,
-                            video : options.video
-                        }));
-                    }
-
-                    return tapes;
-
-                })(this.$items);
-
-                this.curIndex = -1;
-                this.minIndex = 0;
-                this.maxIndex = this.size() - 1;
-
-                this.reset();
+                Panel.prototype.initialize.call(this, options);
             },
 
             render : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $items = $elem.children(),
+                    $view;
 
                 $items.detach();
 
                 $elem.html(this.template);
                 $elem.addClass('z_video');
 
+                $view = this.$('.z_video_view');
+
                 this.$items = $items;
+                this.$inner = $view;
+
+                this.$view = $view;
 
                 return this;
             },
 
-            reset : function(initIndex) {
-                var $view = this.$view,
-                    tapes = this.tapes;
+            reset : function() {
+                var $items = this.$items,
 
-                _.each(tapes, function(tape) {
-                    tape.$el.appendTo($view);
-                    tape.reset();
-                });
+                    items = this.items,
 
-                this.playTo(this.validIndex(initIndex || this.minIndex));
-            },
+                    options = this.options,
+                    current = options.current,
+                    remote = options.remote,
+                    template = options.template,
+                    speed = options.speed,
+                    video = options.video,
+                    vendor = options.vendor;
 
-            playTo : function(index) {
-                var tapes = this.tapes;
+                if (remote && template && _.isFunction(template)) {
+                    if (_.isArray(remote)) {
+                        _.each(remote, function(data) {
+                            var itemId = data.id || void 0,
+                                item;
+                            
+                            this.addItem(item = new VideoTape({
+                                itemId : itemId,
+                                speed : data.speed || speed,
+                                video : data.video || video,
+                                vendor : data.vendor || vendor
+                            }), true);
 
-                _.each(tapes, function(tape) {
-                    tape.hide();
-                });
+                            item.reset();
+                        }, this);
+                    } else {
+                        remote.each(function(model) {
+                            var data = model.toJSON(),
+                                itemId = data.id || void 0,
+                                item;
+                            
+                            this.addItem(item = new VideoTape({
+                                itemId : itemId,
+                                speed : data.speed || speed,
+                                video : data.video || video,
+                                vendor : data.vendor || vendor
+                            }), true);
 
-                tapes[index].show();
-            },
-
-            validIndex : function(index) {
-                var minIndex = this.minIndex,
-                    maxIndex = this.maxIndex;
-
-                if (index === 'next') {
-                    index = this.curIndex + 1;
-                }
-
-                if (index === 'prev') {
-                    index = this.curIndex - 1;
-                }
-
-                if (_.isString(index)) {
-                    index = this.id2Index[index];
-                }
-
-                if (_.isFinite(index)) {
-                    index = +index;
-
-                    if (index > maxIndex) {
-                        index = minIndex;
-                    }
-
-                    if (index < minIndex) {
-                        index = maxIndex;
+                            item.reset();
+                        }, this);
                     }
                 } else {
-                    index = minIndex;
+                    _.each($items, function(elem) {
+                        var $elem = $(elem),
+                            $link = elem.nodeName.match(/a/i) ? $elem : $elem.find('a'),
+                            
+                            speed = $elem.data('speed'),
+                            video = $elem.data('video'),
+                            vendor = $elem.data('vendor'),
+
+                            itemId = elem.id || void 0,
+                            item;
+
+                        if (!video && $link.length) {
+                            video = $link.attr('href');
+                        }
+
+                        this.addItem(item = new VideoTape({
+                            itemId : itemId,
+                            speed : speed || options.speed,
+                            video : video || options.video,
+                            vendor : vendor || options.vendor
+                        }), true);
+
+                        item.reset();
+                    }, this);
                 }
 
-                return index;
-            },
+                if (!this.size()) {
+                    this.addItem(item = new VideoTape({
+                        speed : options.speed,
+                        vendor : options.vendor,
+                        video : options.video
+                    }));
 
-            size : function() {
-                return this.tapes.length;
+                    item.reset();
+                }
+
+                this.cache();
+                this.show(current);
             }
 
         });

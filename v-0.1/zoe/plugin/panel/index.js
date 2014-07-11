@@ -9,7 +9,8 @@ define(function(require, exports, module) {
 
 
     var defaults = {
-            current : 0
+            'speed'   : 200,
+            'current' : 0
         };
 
 
@@ -21,13 +22,14 @@ define(function(require, exports, module) {
 
             initialize : function(options) {
                 this.itemId = options.itemId;
+                this.speed = options.speed;
             },
 
             show : function(silent) {
                 if (silent) {
                     this.$el.show();
                 } else {
-                    this.$el.fadeIn(500);
+                    this.$el.fadeIn(this.speed);
                 }
             },
 
@@ -48,6 +50,9 @@ define(function(require, exports, module) {
             initialize : function(options) {
                 this.options = _.defaults(options, defaults);
 
+                // 这里的队列是用于处理效果的触发
+                // 以免出现漏帧
+                this.queue = utils.queue(this);
                 this.visible = true;
                 this.items = [];
                 this.controls = [];
@@ -55,7 +60,7 @@ define(function(require, exports, module) {
                 this.render();
 
                 // 重组整个控件的dom结构
-                if (this.options.remote) {
+                if (this.options.remote && !_.isArray(this.options.remote)) {
                     this.listenTo(this.options.remote, 'reset', this.reset);
                 } else {
                     this.reset();
@@ -79,46 +84,62 @@ define(function(require, exports, module) {
                 $view = this.$('.z_panel_view');
 
                 this.$items = $items;
-                this.$view = $view;
-            },
+                this.$inner = $view;
 
-            reset : function() {
-                var items = this.items,
-                    options = this.options,
-                    cache = {},
-                    min,
-                    max;
+                this.$view = $view;
             },
 
             reset : function() {
                 var $items = this.$items,
 
                     items = this.items,
+
                     options = this.options,
+                    speed = options.speed,
+                    current = options.current,
                     remote = options.remote,
                     template = options.template;
 
                 if (remote && template && _.isFunction(template)) {
                     // 如果数据来源外部
                     // 则需要根据模板重新渲染
-                    remote.each(function(model) {
-                        var itemId = model.id || model.cid,
-                            item;
+                    // 如果数据来源外部
+                    // 则需要根据模板重新渲染
+                    if (_.isArray(remove)) {
+                        _.each(remote, function(data) {
+                            var itemId = data.id || void 0,
+                                item;
 
-                        item = new PanelItem({
-                            itemId : itemId
-                        });
-                        item.$el.html(template(model.toJSON()));
+                            item = new SliderItem({
+                                itemId : itemId,
+                                speed : speed
+                            });
+                            item.$el.html(template(data));
 
-                        this.addItem(item);
-                    }, this);
+                            this.addItem(item);
+                        })
+                    } else {
+                        remote.each(function(model) {
+                            var itemId = model.id || model.cid,
+                                item;
+
+                            item = new SliderItem({
+                                itemId : itemId,
+                                speed : speed
+                            });
+                            item.$el.html(template(model.toJSON()));
+
+                            this.addItem(item);
+                        }, this);
+                    }
                 } else {
                     _.each($items, function(elem) {
                         var itemId = elem.id || void 0,
                             item;
 
                         item = new PanelItem({
-                            itemId : itemId
+                            itemId : itemId,
+                            speed : speed
                         });
                         item.$el.html(elem);
 
@@ -127,7 +148,7 @@ define(function(require, exports, module) {
                 }
 
                 this.cache();
-                this.show(options.current);
+                this.show(current);
             },
 
             cache : function() {
@@ -148,42 +169,9 @@ define(function(require, exports, module) {
                 this.curIndex = -1;
             },
 
-            addItem : function(item) {
-                var $view = this.$view,
-
-                    panel = this,
-                    items = this.items;
-
-                $view.append(item.$el);
-                items.push(item);
-            },
-
-            addControl : function(control, append) {
-                var $elem =  this.$el,
-
-                    panel = this,
-                    controls = this.controls;
-
-                if (append) {
-                    $elem.append(control.$el);
-                }
-                controls.push(control);
-
-                panel.listenTo(control, 'update', panel.show);
-                control.listenTo(this, 'update', control.active);
-            },
-
             validIndex : function(index) {
                 var minIndex = this.minIndex,
                     maxIndex = this.maxIndex;
-
-                if (index === 'next') {
-                    index = this.curIndex + 1;
-                }
-
-                if (index === 'prev') {
-                    index = this.curIndex - 1;
-                }
 
                 if (_.isString(index)) {
                     index = this.id2Index[index];
@@ -236,7 +224,7 @@ define(function(require, exports, module) {
                     items[index].show();
                 }
 
-                this.curIndex = index;
+                this.update(index);
             },
 
             hide : function() {
@@ -253,16 +241,33 @@ define(function(require, exports, module) {
                 }
             },
 
-            next : function() {
-                this.show('next');
-            },
-
-            prev : function() {
-                this.show('prev');
+            update : function(index) {
+                this.curIndex = index;
+                this.trigger('update', this.curIndex);
             },
 
             size : function() {
                 return this.items.length;
+            },
+
+            addItem : function(item) {
+                var $elem = this.$inner || this.$el,
+                    items = this.items;
+
+                $elem.append(item.$el);
+                items.push(item);
+            },
+
+            addControl : function(control, append) {
+                var $elem =  this.$el,
+                    controls = this.controls;
+
+                if (append) {
+                    $elem.append(control.$el);
+                }
+                controls.push(control);
+
+                this.listenTo(control, 'update', this.show);
             }
             
         });

@@ -4,28 +4,33 @@ define(function(require, exports, module) {
     require('./style.css');
 
 
-    var $ = require('jquery'),
+    var utils = require('tool/utils'),
+
+        $ = require('jquery'),
         _ = require('underscore'),
 
-        B = require('backbone'),
+        View = require('backbone').View,
         
-        utils = require('tool/utils');
-        Pagination = require('plugin/pagination/index');
+        Panel = require('plugin/panel/index'),
+        Menu = require('plugin/menu/index'),
+        Page = require('plugin/page/index');
 
 
     var defaults = {
             'nav'      : false,
             'page'     : false,
-            'auto'     : true,
+            'auto'     : false,
             'loop'     : true,
             'hover'    : true,
             'vertical' : false,
+            'interval' : 5000,
+
             'speed'    : 300,
-            'interval' : 5000
+            'current'  : 0
         };
 
 
-    var SliderItem = B.View.extend({
+    var SliderItem = View.extend({
 
             tagName : 'div',
 
@@ -45,120 +50,74 @@ define(function(require, exports, module) {
 
         }),
 
-        Slider = B.View.extend({
+        Slider = Panel.extend({
 
             template : [
 
                 '<div class="z_slider_view">',
                     '<div class="z_slider_wraper"></div>',
-                '</div>',
-
-                '<div class="z_slider_nav z_slider_prev">',
-                    '<a href="#nav:prev">&lt</a>',
-                '</div>',
-                
-                '<div class="z_slider_nav z_slider_next">',
-                    '<a href="#nav:next">&gt</a>',
                 '</div>'
-
-            ].join(''),
             
-            events : {
-                'click .z_slider_nav a' : 'clickNav',
+            ].join(''),
 
+            events : {
                 'mouseenter' : 'hoverIn',
                 'mouseleave' : 'hoverOut'
             },
 
             initialize : function(options) {
                 options = _.defaults(options, defaults);
-                
-                this.isLoop = options.loop;
-                this.isVertical = options.vertical;
-                this.speed = options.speed;
-                this.interval = options.interval;
-                
-                // 这里的队列是用于处理slide的触发
-                // 以免出现漏帧
-                this.queue = utils.Queue(this);
 
-                // 重组整个控件的dom结构
-                this.render();
+                Panel.prototype.initialize.call(this, options);
 
-                // 提取出控件中的dom成员
-                this.$view = this.$('.z_slider_view');
-                this.$slider = this.$('.z_slider_wraper');
-                this.$nav = this.$('.z_slider_nav');
+                if (options.nav) {
+                    this.nav = {
+                        remote   : [],
+                        template : _.template('<a href="#nav:<%= target %>"><%= text %></a>'),
+                        pattern  : /^nav:([\d\w][\d\w\s\-]*)$/,
+                        repeat   : true
+                    };
 
-                if (!options.nav) {
-                    this.$nav.hide();
+                    this.navNext = new Menu(_.extend(this.nav, {
+                        remote : [{
+                            target : 'next',
+                            text : '&gt;'
+                        }]
+                    }));
+                    this.navNext.$el.addClass('z_slider_nav z_slider_next');
+                    this.addControl(this.navNext, true);
+
+                    this.navPrev = new Menu(_.extend(this.nav, {
+                        remote : [{
+                            target : 'prev',
+                            text : '&lt;'
+                        }]
+                    }));
+                    this.navPrev.$el.addClass('z_slider_nav z_slider_prev');
+                    this.addControl(this.navPrev, true);
                 }
 
-                // 初始化slider item
-                this.items = this.$items.map(function() {
-                    var $elem = $(this),
-
-                        itemId = $elem.attr('id') || void 0,
-                        item;
-
-                    item = new SliderItem({
-                        itemId : itemId
+                if (options.page) {
+                    this.page = new Page({
+                        total : this.size(),
+                        current : options.current
                     });
-
-                    item.$el.append(this);
-                    item.hide();
-
-                    return item;
-                }).get();
-
-                this.curIndex = -1;
-                this.minIndex = 0;
-                this.maxIndex = this.size() - 1;
-
-                this.id2Index = _.reduce(this.items, function(hash, item, index) {
-                    var itemId = item.itemId;
-
-                    if (itemId != void 0) {
-                        hash[itemId] = index;
-                    }
-
-                    return hash;
-                }, {});
-
-                // 初始化slider page
-                this.page = new Pagination({
-                    total : this.size(),
-                    current : options.current && (options.current + 1)
-                });
-
-                this.$el.append(this.page.$el);
-
-                this.listenTo(this.page, 'update', function(page) {
-                    this.goto(page);
-                });
-
-                this.page.listenTo(this, 'update', function(index) {
-                    this.goto(index);
-                });
-                
-                if (!options.page) {
-                    this.page.hide();
+                    this.page.$el.addClass('z_slider_page');
+                    this.addControl(this.page, true);
                 }
-
-                this.reset(options.current);
-
+                
                 this.fxFade = false;
                 this.fxAuto = false;
-                
+
                 if (options.nav && options.hover) {
-                    this.fxFade = {
+                    this.fxActive = {
                         timeId : setTimeout(_.bind(this.active, this, false), 2000)
                     }
                 }
 
                 if (options.auto) {
-                    this.fxAuto = {
-                        timeId : setInterval(_.bind(this.play, this), this.interval),
+                    this.fxPlay = {
+                        timeId : setInterval(_.bind(this.play, this), options.interval),
                         locked : false
                     }
                 }
@@ -166,137 +125,94 @@ define(function(require, exports, module) {
 
             render : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $items = $elem.children(),
+                    $view,
+                    $slider,
 
-                // 首先从dom中提取出内容
+                    options = this.options,
+                    vertical = options.vertical;
+
                 $items.detach();
 
-                // 并重新写入结构
                 $elem.html(this.template);
                 $elem.addClass('z_slider');
 
+                $view = this.$('.z_slider_view');
+                $slider = this.$('.z_slider_wraper');
+
+                if (vertical) {
+                    $elem.addClass('z_slider-v');
+                } else {
+                    $elem.addClass('z_slider-h');
+                }
+
                 this.$items = $items;
+                this.$inner = $slider;
 
-                return this;
+                this.$view = $view;
+                this.$slider = $slider;
             },
 
-            reset : function(initIndex) {
-                var $view = this.$view,
-                    $slider = this.$slider,
+            reset : function() {
+                var $items = this.$items,
 
-                    items = this.items;
-
-                if (this.isVertical) {
-                    $slider.height('200%');
-                    _.each(items, function(item) {
-                        $slider.append(item.$el.height('50%'));
-                    });
-                } else {
-                    $slider.width('200%');
-                    _.each(items, function(item) {
-                        $slider.append(item.$el.width('50%'));
-                    });
-                }
-
-                this.slideTo(this.validIndex(initIndex || this.minIndex));
-            },
-
-            slideTo : function(index, strict, callback) {
-                var $slider = this.$slider,
-
-                    isVertical = this.isVertical,
-                    prevIndex = this.curIndex,
                     items = this.items,
-                    item,
-                    type;
 
-                if (prevIndex == index) return;
-                item = items[index];
-                item.show();
+                    options = this.options,
+                    current = options.current,
+                    remote = options.remote,
+                    template = options.template;
 
-                if (_.isBoolean(strict) ? strict : prevIndex > index) {
-                    item.$el.prependTo($slider);
-                    type = isVertical ? Slider.FROM_TOP : Slider.FROM_LEFT;
-                } else {
-                    item.$el.appendTo($slider);
-                    type = isVertical ? Slider.FROM_BOTTOM : Slider.FROM_RIGHT;
-                }
+                if (remote && template && _.isFunction(template)) {
+                    // 如果数据来源外部
+                    // 则需要根据模板重新渲染
+                    if (_.isArray(remove)) {
+                        _.each(remote, function(data) {
+                            var itemId = data.id || void 0,
+                                item;
 
-                if (prevIndex != -1) {
-                    if (_.isFunction(callback)) {
-                        callback = _.wrap(callback, function(callback) {
-                            this.items[prevIndex].hide();
-                            this.animated = false;
+                            item = new SliderItem({
+                                itemId : itemId
+                            });
+                            item.$el.html(template(data));
 
-                            callback.call(this);
-                        });
+                            this.addItem(item);
+                        }, this)
                     } else {
-                        callback = function() {
-                            this.items[prevIndex].hide();
-                            this.animated = false;
-                        }
-                    }
+                        remote.each(function(model) {
+                            var itemId = model.id || model.cid,
+                                item;
 
-                    this.animated = true;
-                    this.slide(type, callback);
+                            item = new SliderItem({
+                                itemId : itemId
+                            });
+                            item.$el.html(template(model.toJSON()));
+
+                            this.addItem(item);
+                        }, this);
+                    }
                 } else {
-                    if (_.isFunction(callback)) {
-                        callback.call(this);
-                    }
+                    _.each($items, function(elem) {
+                        var itemId = elem.id || void 0,
+                            item;
+
+                        item = new SliderItem({
+                            itemId : itemId
+                        });
+                        item.$el.html(elem);
+
+                        this.addItem(item);
+                    }, this);
                 }
 
-                this.curIndex = index;
-                this.trigger('update', this.curIndex);
-            },
-
-            slide : function(type, callback) {
-                var $slider = this.$slider,
-
-                    init = {},
-                    dest = {};
-
-                switch (type) {
-                    case Slider.FROM_TOP :
-                        init.top = '-100%';
-                        dest.top = '0';
-
-                        break;
-
-                    case Slider.FROM_BOTTOM :
-                        init.top = '0';
-                        dest.top = '-100%';
-
-                        break;
-
-                    case Slider.FROM_LEFT :
-                        init.left = '-100%';
-                        dest.left = '0';
-
-                        break;
-
-                    case Slider.FROM_RIGHT :
-                        init.left = '0';
-                        dest.left = '-100%';
-
-                        break;
-                }
-
-                if (_.isFunction(callback)) {
-                    callback = _.wrap(callback, function(callback) {
-                        this.$slider.css({left : 0, top : 0});
-                        callback.call(this);
-                    });
-                } else {
-                    callback = function() {
-                        this.$slider.css({left : 0, top : 0});
-                    }
-                }
-
-                $slider.css(init).animate(dest, this.speed, _.bind(callback, this));
+                this.cache();
+                this.show(current);
             },
 
             validIndex : function(index) {
-                var isLoop = this.isLoop,
+                var options = this.options,
+                    loop = options.loop,
+
                     minIndex = this.minIndex,
                     maxIndex = this.maxIndex;
 
@@ -316,11 +232,11 @@ define(function(require, exports, module) {
                     index = +index;
 
                     if (index > maxIndex) {
-                        index = isLoop ? minIndex : maxIndex;
+                        index = loop ? minIndex : maxIndex;
                     }
 
                     if (index < minIndex) {
-                        index = isLoop ? maxIndex : minIndex;
+                        index = loop ? maxIndex : minIndex;
                     }
                 } else {
                     index = minIndex;
@@ -329,28 +245,57 @@ define(function(require, exports, module) {
                 return index;
             },
 
-            slideBuffer : function(index, strict) {
-                var queue = this.queue,
-                    isEmpty = !queue.size('slide');
+            slideBuffer : function(index, next) {
+                var items = this.items,
+                    curIndex = this.curIndex,
+
+                    animated = this.animated,
+                    queue = this.queue,
+                    size = queue.size('slide');
 
                 queue.clear('slide');
 
-                queue.add('slide', function(){
-                    // 加一个160毫秒的delay
-                    // 可以减缓响应速度
-                    // 感觉更真实
-                    _.delay(function(){
-                        queue.next('slide');
-                    }, 100);
-                });
+                if (curIndex == -1) {
+                    queue.add('slide', function(){
+                        _.defer(function(){
+                            queue.next('slide');
+                        });
+                    });
 
-                queue.add('slide', function() {
-                    this.slideTo(index, strict, function() {
+                    queue.add('slide', function() {
+                        // curIndex == -1
+                        // 说明控件仍未初始化
+                        _.each(items, function(item) {
+                            item.hide();
+                        });
+                        items[index].show();
+
+                        this.update(index);
+
                         queue.next('slide');
                     });
-                });
-              
-                if (isEmpty && !this.animated) {
+                } else {
+                    queue.add('slide', function(){
+                        // 加一个160毫秒的delay
+                        // 可以减缓响应速度
+                        // 感觉更真实
+                        _.delay(function(){
+                            queue.next('slide');
+                        }, 160);
+                    });
+
+                    queue.add('slide', function() {
+                        this.animated = true;
+                        this.slideTo(index, next, function() {
+                            this.animated = false;
+                            queue.next('slide');
+                        });
+                        
+                        this.update(index);
+                    });
+                }
+
+                if (!size && !animated) {
                     queue.next('slide');
                 }
 
@@ -359,69 +304,138 @@ define(function(require, exports, module) {
                 // 由于事件冒泡，currentTarget会变为其父元素
             },
 
-            goto : function(index) {
+            slideTo : function(index, next, callback) {
+                var $slider = this.$slider,
+
+                    curIndex = this.curIndex,
+                    items = this.items,
+                    type;
+
+                items[index].show();
+
+                if (_.isBoolean(next) ? next : index > curIndex) {
+                    type = Slider.TYPE_NEXT;
+                    items[index].$el.appendTo($slider);
+                } else {
+                    type = Slider.TYPE_PREV;
+                    items[index].$el.prependTo($slider);
+                }
+
+                if (_.isFunction(callback)) {
+                    callback = _.wrap(callback, function(callback) {
+                        this.items[curIndex].hide();
+                        callback.call(this);
+                    });
+                } else {
+                    callback = function() {
+                        this.items[prevIndex].hide();
+                    }
+                }
+
+                this.slide(type, callback);
+            },
+
+            slide : function(type, callback) {
+                var $slider = this.$slider,
+
+                    options = this.options,
+                    vertical = options.vertical,
+
+                    init = {},
+                    dest = {};
+
+                switch (type) {
+                    case Slider.TYPE_PREV :
+                        if (vertical) {
+                            init.top = '-100%';
+                            dest.top = '0';
+                        } else {
+                            init.left = '-100%';
+                            dest.left = '0';
+                        }
+
+                        break;
+
+                    case Slider.TYPE_NEXT :
+                        if (vertical) {
+                            init.top = '0';
+                            dest.top = '-100%';
+                        } else {
+                            init.left = '0';
+                            dest.left = '-100%';
+                        }
+
+                        break;
+                }
+
+                if (_.isFunction(callback)) {
+                    callback = _.wrap(callback, function(callback) {
+                        this.$slider.css({left : 0, top : 0});
+                        callback.call(this);
+                    });
+                } else {
+                    callback = function() {
+                        this.$slider.css({left : 0, top : 0});
+                    }
+                }
+
+                $slider.css(init).animate(dest, this.speed, _.bind(callback, this));
+            },
+
+            show : function(index) {
+                var items = this.items,
+                    curIndex = this.curIndex,
+                    next;
+
+                if (!this.visible) {
+                    this.$el.show();
+                    this.visible = true;
+
+                    if (curIndex != -1) {
+                        items[curIndex].show();
+                    }
+                }
+
+                if (index == void 0) return;
+
+                if (_.isString(index) && index.match(/^next|prev$/)) {
+                    next = index == 'next';
+                }
+
                 index = this.validIndex(index);
-                this.slideBuffer(index);
+                if (curIndex == index) return;
+
+                this.slideBuffer(index, next);
+            },
+
+            update : function(index) {
+                Panel.prototype.update.call(this, index);
+
+                if (this.page) {
+                    this.page.active(this.curIndex);
+                }
             },
 
             next : function() {
-                var index = this.validIndex('next');
-                this.slideBuffer(index, false);
+                this.show('next');
             },
 
             prev : function() {
-                var index = this.validIndex('prev');
-                this.slideBuffer(index, true);
-            },
-
-            show : function() {
-                this.$el.show();
-            },
-
-            hide : function() {
-                this.$el.hide();
+                this.show('prev');
             },
 
             active : function(toggle) {
-                if (this.fxAuto) {
-                    this.fxAuto.locked = !!toggle;
-                }
+                this.fxPlay && (this.fxPlay.locked = !!toggle);
 
-                if (this.fxFade) {
-                    clearTimeout(this.fxFade.timeId);
+                if (this.fxActive) {
+                    clearTimeout(this.fxActive.timeId);
                     this.$el.toggleClass('inactive', !toggle);
                 }
             },
 
             play : function() {
-                if (!this.fxAuto || this.fxAuto.locked) return;
-                this.next(); 
-            },
-
-            size : function() {
-                return this.items.length;
-            },
-
-            clickNav : function(event) {
-                var target = event.currentTarget,
-                    hash = utils.parseHash(target.href);
-
-                event && event.preventDefault();
-
-                if (hash = hash.match(/^nav:([\d\w][\d\w\s]*)$/)) {
-                    switch (hash[1]) {
-                        case 'prev' :
-                            this.prev();
-                            break;
-
-                        case 'next' :
-                            this.next();
-                            break;
-
-                        default :
-                            this.goto(hash[1]);
-                            break;
-                    }
+                if (this.fxPlay && !this.fxPlay.locked) {
+                    this.next();
                 }
             },
 
@@ -434,12 +448,10 @@ define(function(require, exports, module) {
                 event && event.preventDefault();
                 this.active(false);
             }
-            
+
         }, {
-            FROM_TOP : 1,
-            FROM_BOTTOM : 2,
-            FROM_LEFT : 4,
-            FROM_RIGHT : 8
+            TYPE_PREV : 1,
+            TYPE_NEXT : 2
         });
 
 

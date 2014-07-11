@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <title>Zoe Slider</title>
+    <title>Zoe Panel</title>
     <style>
         * {
             margin: 0;
@@ -13,6 +13,7 @@
             width: 206px;
             height: 159px;
             overflow: hidden;
+            font-family: "Microsoft YaHei";
         }
 
         .panel img {
@@ -29,7 +30,6 @@
             float: left;
             color: white;
             background-color: rgba(0,0,0,0.5);
-            font-family: "Microsoft YaHei";
             font-size: 40px;
             font-weight: bold;
             text-align: center;
@@ -39,40 +39,73 @@
             width: 206px;
             height: 159px;
         }
+
+        .tab {
+            width: 206px;
+            background: #666;
+            font-size: 0;
+            font-family: "Microsoft YaHei";
+            text-align: center;
+        }
+
+        .tab a {
+            display: inline-block;
+            width: 24px;
+            line-height: 24px;
+            color: white;
+            background: #666;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .tab a.active {
+            background: black;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="canvas">
-        <div class="panel" data-zoe="panel[current=0]" data-id="p1">
-            <div class="panel_item">
+        <div class="tab" data-zoe="menu[current=item-1]" data-id="v2">
+            <a href="#item-1">1</a>
+            <a href="#item-2">2</a>
+            <a href="#item-3">3</a>
+            <a href="#item-4">4</a>
+            <a href="#item-5">5</a>
+            <a href="#item-6">6</a>
+            <a href="#item-7">7</a>
+            <a href="#item-1">1</a>
+        </div>
+        <div class="panel" data-zoe="panel[current=item-1]" data-id="v1">
+            <div id="item-1" class="panel_item">
                 <img src="images/slider/4.jpg" />
                 <p>1</p>
             </div>
-            <div class="panel_item">
+            <div id="item-2" class="panel_item">
                 <img src="images/slider/5.jpg" />
                 <p>2</p>
             </div>
-            <div class="panel_item">
+            <div id="item-3" class="panel_item">
                 <img src="images/slider/6.jpg" />
                 <p>3</p>
             </div>
-            <div class="panel_item">
+            <div id="item-4" class="panel_item">
                 <img src="images/slider/7.jpg" />
                 <p>4</p>
             </div>
-            <div class="panel_item">
+            <div id="item-5" class="panel_item">
                 <img src="images/slider/8.jpg" />
                 <p>5</p>
             </div>
-            <div class="panel_item">
+            <div id="item-6" class="panel_item">
                 <img src="images/slider/9.jpg" />
                 <p>6</p>
             </div>
-            <div class="panel_item">
+            <div id="item-7" class="panel_item">
                 <img src="images/slider/10.jpg" />
                 <p>7</p>
             </div>
-            <div class="panel_item">
+            <div id="item-8" class="panel_item">
                 <img src="images/slider/11.jpg" />
                 <p>8</p>
             </div>

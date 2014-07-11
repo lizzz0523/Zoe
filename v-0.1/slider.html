@@ -13,6 +13,7 @@
             width: 206px;
             height: 159px;
             overflow: hidden;
+            font-family: "Microsoft YaHei";
         }
 
         .slider img {
@@ -29,7 +30,6 @@
             float: left;
             color: white;
             background-color: rgba(0,0,0,0.5);
-            font-family: "Microsoft YaHei";
             font-size: 40px;
             font-weight: bold;
             text-align: center;
@@ -43,7 +43,7 @@
 </head>
 <body>
     <div class="canvas">
-        <div class="slider" data-zoe="slider[page, loop, vertical, hover=false]" data-id="s1">
+        <div class="slider" data-zoe="slider[page, loop, auto]">
             <div class="slider_item">
                 <img src="images/slider/4.jpg" />
                 <p>1</p>
@@ -77,7 +77,7 @@
                 <p>8</p>
             </div>
         </div>
-        <div class="slider" data-zoe="slider[nav, loop]" data-id="s2">
+        <div class="slider" data-zoe="slider[nav, loop, vertical, auto, hover]">
             <img class="slider_item" src="images/slider/4.jpg" />
             <img class="slider_item" src="images/slider/5.jpg" />
             <img class="slider_item" src="images/slider/6.jpg" />
