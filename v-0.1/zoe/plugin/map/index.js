@@ -56,7 +56,6 @@ define(function(require, exports, module) {
 
 
     var MapSite = View.extend({
-
             className : 'z_map_site',
 
             labelTmpl : _.template([
@@ -68,17 +67,17 @@ define(function(require, exports, module) {
             ].join('')),
 
             initialize : function(options) {
-                this.itemId = options.itemId,
-
+                this.itemId = options.itemId;
                 this.map = options.map,
-
-                this.lng = options.lng || 0,
+                this.lng = options.lng || 0;
                 this.lat = options.lat || 0;
+
                 this.position = new Point(this.lng, this.lat);
             },
 
-            initMarker : function(map, options) {
-                var center = this.position,
+            initMarker : function(options) {
+                var map = this.map,
+                    center = this.position,
 
                     iconSize,
                     iconAnchor,
@@ -113,12 +112,13 @@ define(function(require, exports, module) {
                 this.marker = marker;
             },
 
-            initLabel : function(map, options) {
+            initLabel : function(options) {
                 var $elem = this.$el,
                     
                     width = $elem.outerWidth(true),
                     height = $elem.outerHeight(true),
 
+                    map = this.map,
                     center = this.position,
 
                     labelTmpl = this.labelTmpl,
@@ -143,13 +143,13 @@ define(function(require, exports, module) {
                 this.label = label;
             },
 
-            center : function(map, offset, zoom) {
-                var lng = this.lng,
+            center : function(offset, zoom) {
+                var map = this.map,
+                    lng = this.lng,
                     lat = this.lat + offset;
 
                 map.centerAndZoom(new Point(lng, lat), zoom);
             }
-
         }),
 
         MapView = Panel.extend({
@@ -234,6 +234,7 @@ define(function(require, exports, module) {
 
                             item = new MapSite({
                                 itemId : itemId,
+                                map : map,
                                 lat : data.lat || lat,
                                 lng : data.lng || lng
                             });
@@ -241,8 +242,8 @@ define(function(require, exports, module) {
 
                             this.addItem(item);
 
-                            item.initMarker(map, icon);
-                            item.initLabel(map, label);
+                            item.initMarker(icon);
+                            item.initLabel(label);
                         }, this);
                     } else {
                         remote.each(function(model) {
@@ -251,6 +252,7 @@ define(function(require, exports, module) {
 
                             item = new MapSite({
                                 itemId : itemId,
+                                map : map,
                                 lat : model.get('lat') || lat,
                                 lng : model.get('lng') || lng
                             });
@@ -258,8 +260,8 @@ define(function(require, exports, module) {
 
                             this.addItem(item);
 
-                            item.initMarker(map, icon);
-                            item.initLabel(map, label);
+                            item.initMarker(icon);
+                            item.initLabel(label);
                         }, this);
                     }
                 } else {
@@ -271,6 +273,7 @@ define(function(require, exports, module) {
 
                         item = new MapSite({
                             itemId : itemId,
+                            map : map,
                             lat : $elem.data('lat') || lat,
                             lng : $elem.data('lng') || lng
                         });
@@ -278,18 +281,19 @@ define(function(require, exports, module) {
 
                         this.addItem(item);
 
-                        item.initMarker(map, icon);
-                        item.initLabel(map, label);
+                        item.initMarker(icon);
+                        item.initLabel(label);
                     }, this);
                 }
 
                 if (!this.size()) {
                     this.addItem(item = new MapSite({
+                        map : map,
                         lat : lat,
                         lng : lng
                     }));
 
-                    item.initMarker(map, icon);
+                    item.initMarker(icon);
                 }
 
                 $asset.hide();
@@ -320,7 +324,7 @@ define(function(require, exports, module) {
                 index = this.validIndex(index);
                 if (curIndex == index) return;
 
-                items[index].center(map, offset, zoom);
+                items[index].center(offset, zoom);
 
                 this.updateIndex(index);
             }
