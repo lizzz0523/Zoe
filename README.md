@@ -18,23 +18,25 @@ Zoe的目标对象主要是设计师，这是由于__Zoe__在开发初期就定�
 
 零代码并不是指完全不需要写代码，而是，把js代码以配置的方式写在了html标签中。举个例子，在专题制作时，经常会用到Slider特效做图片切换，那么使用__Zoe__，你只需在html中作如下配置：
 
-    <div class="my_slider" data-zoe="slider[nav, auto, loop, hover]">
-        <p class="my_slider_item">
-            <img src="path/to/pic1.jpg" />
-        </p>
-        <p class="my_slider_item">
-            <img src="path/to/pic2.jpg" />
-        </p>
-        <p class="my_slider_item">
-            <img src="path/to/pic3.jpg" />
-        </p>
-        <p class="my_slider_item">
-            <img src="path/to/pic4.jpg" />
-        </p>
-        <p class="my_slider_item">
-            <img src="path/to/pic5.jpg" />
-        </p>
-    </div>
+```html
+<div class="my_slider" data-zoe="slider[nav, auto, loop, hover]">
+    <p class="my_slider_item">
+        <img src="path/to/pic1.jpg" />
+    </p>
+    <p class="my_slider_item">
+        <img src="path/to/pic2.jpg" />
+    </p>
+    <p class="my_slider_item">
+        <img src="path/to/pic3.jpg" />
+    </p>
+    <p class="my_slider_item">
+        <img src="path/to/pic4.jpg" />
+    </p>
+    <p class="my_slider_item">
+        <img src="path/to/pic5.jpg" />
+    </p>
+</div>
+```
 
 你只需在某个div标签中，按照`name[param1=value1, param2=value2, ...]`格式配置`data-zoe`属性，则__Zoe__内部的扫描程序，就会自动获取到这些配置信息，并对Slider组件进行初始化。
 
@@ -50,59 +52,69 @@ Zoe的目标对象主要是设计师，这是由于__Zoe__在开发初期就定�
 
 由于使用了seajs，因此如果你要在页面中使用__Zoe__，那么你就需要在body标签结束之前，加入如下代码：
 
-    <script type="text/javascript" src="zoe/sea.js"></script>
-    <script type="text/javascript" src="zoe/sea-config.js"></script>
+```html
+<script type="text/javascript" src="zoe/sea.js"></script>
+<script type="text/javascript" src="zoe/sea-config.js"></script>
+```
 
 在_sea-config.js_文件中，有这么一句：
 
-    sea.use('zoe');
+```javascript
+sea.use('zoe');
+```
 
 这里就是程序的开端，__Zoe__是默认以_zoe.js_作为程序入口的，如果有人需要在页面中加入自定义的一些效果时，你只需要修改这个程序入口为你自己编写的sea模块，并且在这个自定义的sea模块中，引入_zoe.js_即可，例如：
     
-    /*
-        这里是sea-config.js文件
-    */
-    sea.use('app');
+```javascript
+/*
+    这里是sea-config.js文件
+*/
+sea.use('app');
 
 
-    /* 
-        这里是app.js文件
-    */
-    define(function(require, exports, module) {
+/* 
+    这里是app.js文件
+*/
+define(function(require, exports, module) {
 
-        var zoe = require('zoe');
+    var zoe = require('zoe');
 
-    });
+});
+```
 
 而且这个require进来的`zoe`对象提供了几个有用的接口，例如判断所有__Zoe__组件都初始化完毕：
 
-    /* 
-        这里是app.js文件
-    */
-    define(function(require, exports, module) {
+```javascript
+/* 
+    这里是app.js文件
+*/
+define(function(require, exports, module) {
 
-        var zoe = require('zoe');
+    var zoe = require('zoe');
 
-        zoe(function() {
-            // 这里的回调就是当所有组件都初始化完毕才执行的
-        });
-
+    zoe(function() {
+        // 这里的回调就是当所有组件都初始化完毕才执行的
     });
+
+});
+```
 
 又例如，你需要寻找某个组件，你只需要在组件对应的div标签上添加`data-id`属性，然后利用`zoe`对象的`find`方法：
 
-    /* 
-        这里是app.js文件
-    */
-    define(function(require, exports, module) {
+```javascript
+/* 
+    这里是app.js文件
+*/
+define(function(require, exports, module) {
 
-        var zoe = require('zoe');
+    var zoe = require('zoe');
 
-        zoe(function() {
-            var view = zoe.find('view-id');
-        });
-
+    zoe(function() {
+        var view = zoe.find('view-id');
     });
+
+});
+```
 
 这样，你就能与__Zoe__进行交互了。
 
