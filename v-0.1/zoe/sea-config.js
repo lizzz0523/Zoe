@@ -15,4 +15,4 @@ seajs.config({
     charset : 'utf-8'
 });
 
-seajs.use('app');
+seajs.use('zoe');
