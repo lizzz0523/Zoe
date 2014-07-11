@@ -143,12 +143,16 @@ define(function(require, exports, module) {
                 this.label = label;
             },
 
-            center : function(offset, zoom) {
+            show : function(offset, zoom, silent) {
                 var map = this.map,
                     lng = this.lng,
                     lat = this.lat + offset;
 
-                map.centerAndZoom(new Point(lng, lat), zoom);
+                if (silent) {
+                    map.centerAndZoom(new Point(lng, lat), zoom);
+                } else {
+                    map.panTo(new Point(lng, lat));
+                }
             }
         }),
 
@@ -324,7 +328,7 @@ define(function(require, exports, module) {
                 index = this.validIndex(index);
                 if (curIndex == index) return;
 
-                items[index].center(offset, zoom);
+                items[index].show(offset, zoom, curIndex == -1);
 
                 this.updateIndex(index);
             }
