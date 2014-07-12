@@ -40,6 +40,27 @@ __Zoe__的目标对象主要是设计师，这是由于__Zoe__在开发初期就
 
 你只需在某个div标签中，按照`name[param1=value1, param2=value2, ...]`格式配置`data-zoe`属性，则__Zoe__内部的扫描程序，就会自动获取到这些配置信息，并对Slider组件进行初始化。
 
+而__Zoe__另一项功能是View Binding，即__Zoe__内部，自动让不同的组件之间产生联动，同样，你只需要简单的配置一下html标签，例如，你需要让一个Menu组件与一个Panel组件产生联动：
+
+```html
+<div class="my_tab" data-zoe="menu[current=item-1]" data-for="panel-1">
+    <a href="#item-1">Tab-1</a>
+    <a href="#item-2">Tab-2</a>
+    <a href="#item-3">Tab-3</a>
+</div>
+<div class="my_panel" data-zoe="panel[current=item-1]" data-id="panel-1">
+    <p id="item-1" class="my_panel_item">
+        <img src="path/to/pic1.jpg" />
+    </p>
+    <p id="item-2" class="my_panel_item">
+        <img src="path/to/pic2.jpg" />
+    </p>
+    <p id="item-3" class="my_panel_item">
+        <img src="path/to/pic3.jpg" />
+    </p>
+</div>
+```
+
 但可能有人会疑问，如果整个程序都被自动执行，那当项目需要做一些自定义的效果时，不就没有办法了吗？其实这个问题，很好解决，在之后的文字我会详细说明。
 
 
@@ -67,7 +88,8 @@ sea.use('zoe');
     
 ```javascript
 /*
-    这里是sea-config.js文件
+    这里是sea-config.js文件,
+    使用自定义的app.js作为程序的入口
 */
 sea.use('app');
 
