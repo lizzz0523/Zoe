@@ -1,3 +1,7 @@
+// Slider组件，属于MultiView组件的一类（基础了Panel）
+// 主要用于图片切换和焦点图效果
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
     // 加载对应的css文件
@@ -17,7 +21,7 @@ define(function(require, exports, module) {
     var defaults = {
             'nav'      : false,
             'page'     : false,
-            'auto'     : false,
+            'auto'     : true,
             'loop'     : true,
             'hover'    : true,
             'vertical' : false,
@@ -29,9 +33,6 @@ define(function(require, exports, module) {
 
 
     var SliderItem = View.extend({
-
-            tagName : 'div',
-
             className : 'z_slider_item',
 
             initialize : function(options) {
@@ -45,11 +46,9 @@ define(function(require, exports, module) {
             hide : function() {
                 this.$el.hide();
             }
-
         }),
 
         Slider = Panel.extend({
-
             template : [
 
                 '<div class="z_slider_view">',
@@ -295,9 +294,7 @@ define(function(require, exports, module) {
                     });
 
                     queue.add(qname, function() {
-                        _.each(items, function(item) {
-                            item.hide();
-                        });
+                        _.invoke(items, 'hide');
                         items[index].show();
 
                         this.updateIndex(index);
@@ -444,7 +441,6 @@ define(function(require, exports, module) {
                 event && event.preventDefault();
                 this.active(false);
             }
-
         }, {
             TYPE_PREV : 1,
             TYPE_NEXT : 2

@@ -8,24 +8,54 @@
             margin: 0;
             padding: 0;
         }
+
         body {
             font-family: "Microsoft YaHei";
         }
+
         ul {
             list-style: none;
         }
+
         .map {
             width: 450px;
             height: 400px;
             font-size: 14px;
         }
+
+        .tab {
+            width: 450px;
+            background: #666;
+            font-size: 0;
+            font-family: "Microsoft YaHei";
+            text-align: center;
+        }
+
+        .tab a {
+            display: inline-block;
+            padding: 0 40px;
+            line-height: 24px;
+            color: white;
+            background: #666;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        
+        .tab a.active {
+            background: black;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="canvas">
+        <div class="tab" data-zoe="menu[current=site-1]" data-for="v1">
+            <a href="#site-1">广州长宁</a>
+            <a href="#site-2">广州长凯</a>
+        </div>
         <div class="map" data-zoe="map" data-id="v1">
-            <p data-lng="113.26842946866" data-lat="23.109992557766">广汽丰田长宁店   (400-818-9038)</p>
-            <p data-lng="113.26842946866" data-lat="23.189992557766">广汽丰田长宁店   (400-818-9038)</p>
+            <p id="site-1" data-lng="113.26842946866" data-lat="23.109992557766">广汽丰田长宁店   (400-818-9038)</p>
+            <p id="site-2" data-lng="113.26929507231" data-lat="23.203684955051">广州长凯丰田   (400-616-3998)</p>
         </div>
     </div>
 <script type="text/javascript" src="zoe/sea.js"></script>

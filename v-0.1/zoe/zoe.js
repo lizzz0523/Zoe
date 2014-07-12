@@ -14,7 +14,7 @@ var ready = 0,
 
     tpath = 'plugin/{s}/index.js',
 
-    parseData = function(str) {
+    getData = function(str) {
         var data = String(str).match(rdata);
 
         if (data) {
@@ -27,7 +27,7 @@ var ready = 0,
         return false;
     },
 
-    parseParam = function(str, separator) {
+    getParam = function(str, separator) {
         var param = String(str).match(rparam),
             key,
             value;
@@ -112,7 +112,9 @@ $('[data-zoe]').each(function(index, elem) {
     var $elem = $(elem),
         
         viewId = $elem.data('id'),
+        viewBind = $elem.data('for'), 
         viewData,
+        view,
 
         options;
 
@@ -121,17 +123,29 @@ $('[data-zoe]').each(function(index, elem) {
     }
       
     if (!zoe.views[viewId]) {
-        viewData = parseData($elem.data('zoe'));
+        viewData = getData($elem.data('zoe'));
 
         if (viewData) {
-            options = parseParam(viewData.params);
+            options = getParam(viewData.params);
             options.el = $elem[0];
 
             ready++;
             require.async(tpath.replace(/\{s\}/g, viewData.plugin), function(View) {
-                zoe.views[viewId] = new View(options);
+                view = new View(options);
+                zoe.views[viewId] = view;
+
+                if (viewBind) {
+                    zoe.on('bind', function() {
+                        try {
+                            zoe.find(viewBind).addControl(view);
+                        } catch(e) {
+                            // do nothing
+                        }
+                    });
+                }
 
                 if (--ready == 0) {
+                    zoe.emit('bind');
                     zoe.emit('ready');
                 }
             });
@@ -140,9 +154,9 @@ $('[data-zoe]').each(function(index, elem) {
 });
 
 if (ready == 0) {
-    setTimeout(function() {
+    _.defer(function() {
         zoe.emit('ready');
-    }, 0);
+    });
 }
 
 

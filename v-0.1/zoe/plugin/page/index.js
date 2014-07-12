@@ -1,3 +1,6 @@
+// 翻页组件
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
     var utils = require('tool/utils'),
@@ -9,9 +12,9 @@ define(function(require, exports, module) {
 
 
     var defaults = {
-            'repeat'   : false,
             'current'  : 0,
             'total'    : 0,
+
             'pattern'  : /^page:([\d\w][\d\w\s]*)$/,
             'template' : _.template([
 
@@ -24,7 +27,6 @@ define(function(require, exports, module) {
 
 
     var Pagination = View.extend({
-
             events : {
                 'click a' : 'clickPage'
             },
@@ -93,14 +95,10 @@ define(function(require, exports, module) {
 
             active : function(page) {
                 var $pages = this.$pages,
-
-                    options = this.options,
-                    repeat = this.repeat,
-
                     curPage = this.curPage;
 
                 page = this.validPage(page);
-                if (!repeat && curPage == page) return;
+                if (curPage == page) return;
 
                 $pages.removeClass('active');
                 $pages.eq(page).addClass('active');
@@ -141,7 +139,6 @@ define(function(require, exports, module) {
                     this.active(hash);
                 }
             }
-            
         });
 
 

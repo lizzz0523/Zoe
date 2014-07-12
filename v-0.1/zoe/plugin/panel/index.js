@@ -1,3 +1,7 @@
+// Panel组件，属于MultiView组件，是其他MultiView组件的基类
+// 主要用于与Menu产生联动，形成Tab-Panel效果
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
     var queue = require('tool/queue'),
@@ -15,8 +19,6 @@ define(function(require, exports, module) {
 
 
     var PanelItem = View.extend({
-            tagName : 'div',
-
             className : 'z_panel_item',
 
             initialize : function(options) {
@@ -98,8 +100,6 @@ define(function(require, exports, module) {
                     template = options.template;
 
                 if (remote && template && _.isFunction(template)) {
-                    // 如果数据来源外部
-                    // 则需要根据模板重新渲染
                     // 如果数据来源外部
                     // 则需要根据模板重新渲染
                     if (_.isArray(remove)) {
@@ -217,9 +217,7 @@ define(function(require, exports, module) {
                 if (curIndex == -1) {
                     // curIndex == -1
                     // 说明控件仍未初始化
-                    _.each(items, function(item) {
-                        item.hide();
-                    });
+                    _.invoke(items, 'hide');
                     items[index].show(true);
                 } else {
                     items[curIndex].hide();
@@ -239,6 +237,8 @@ define(function(require, exports, module) {
 
                     if (curIndex != -1) {
                         items[curIndex].hide();
+                    } else {
+                        _.invoke(items, 'hide');
                     }
                 }
             },

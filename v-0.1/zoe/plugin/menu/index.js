@@ -1,3 +1,6 @@
+// 导航组件，可以用作Tab，Menu，Nav等
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
     var utils = require('tool/utils'),
@@ -9,7 +12,8 @@ define(function(require, exports, module) {
 
 
     var defaults = {
-            'repeat'   : false,
+            'repeat'   : false, //重复标志，由于现实按钮能否重复点击
+
             'pattern'  : /^tab:([\d\w][\d\w\s\-]*)$/,
             'template' : _.template([
 
@@ -20,7 +24,6 @@ define(function(require, exports, module) {
 
 
     var Menu = View.extend({
-
             events : {
                 'click a' : 'clickTab'
             },
@@ -72,7 +75,9 @@ define(function(require, exports, module) {
                             $tab = elem.nodeName.match(/a/i) ? $elem : $elem.find('a');
 
                         $tab.each(function() {
-                            var hash = utils.parseHash(this.href);
+                            var hash = this.getAttribute('href', 2);
+                            
+                            hash = utils.parseHash(hash);
 
                             if (hash.length) {
                                 hash = 'tab:' + hash;
@@ -158,8 +163,7 @@ define(function(require, exports, module) {
                 if (hash && (hash = hash.pop())) {
                     this.active(hash);
                 }
-            }
-            
+            } 
         });
 
 

@@ -8,25 +8,54 @@
             margin: 0;
             padding: 0;
         }
+
         body {
             font-family: "Microsoft YaHei";
         }
+
         ul {
             list-style: none;
         }
+        
         .video {
             width: 320px;
             height: 240px;
+        }
+
+        .tab {
+            width: 320px;
+            background: #666;
+            font-size: 0;
+            font-family: "Microsoft YaHei";
+            text-align: center;
+        }
+
+        .tab a {
+            display: inline-block;
+            padding: 0 40px;
+            line-height: 24px;
+            color: white;
+            background: #666;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        
+        .tab a.active {
+            background: black;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="canvas">
-        <div class="video" data-zoe="video" data-id="v1">
-            <a href="http://v.bitauto.com/vplay/332302.html">些许纠结 易车体验数据横评高尔夫R</a>
-            <a href="http://v.bitauto.com/vplay/325512.html">海外试驾 雷诺梅甘娜vs西雅特Leon</a>
+        <div class="tab" data-zoe="menu[current=tape-1]" data-for="v1">
+            <a href="#tape-1">视频1</a>
+            <a href="#tape-2">视频2</a>
         </div>
-        <div class="video" data-zoe="video[video=XNzM2OTIyNzQ0, vendor=youku]"></div>
+        <div class="video" data-zoe="video" data-id="v1">
+            <a id="tape-1" href="http://v.bitauto.com/vplay/332302.html">些许纠结 易车体验数据横评高尔夫R</a>
+            <a id="tape-2" href="http://v.youku.com/v_show/id_XNzM2OTIyNzQ0.html" data-vendor="youku">习近平在纪念全民族抗战爆发77周年仪式上讲话</a>
+        </div>
     </div>
 <script type="text/javascript" src="zoe/sea.js"></script>
 <script type="text/javascript" src="zoe/sea-config.js"></script>

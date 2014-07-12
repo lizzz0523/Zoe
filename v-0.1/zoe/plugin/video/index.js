@@ -1,10 +1,15 @@
+// 视频组件，使用了swfobject.js
+// 暂时支持，易车视频（原版，乐视版）、优酷视频、土豆视频
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
     // 加载对应的css文件
     require('./style.css');
 
 
-    var swf = require('tool/swf'),
+    var // 引入swfobject，已经过cmd封装
+        swf = require('tool/swf'),
 
         $ = require('jquery'),
         _ = require('underscore'),
@@ -69,7 +74,6 @@ define(function(require, exports, module) {
 
 
     var VideoTape = View.extend({
-
             className : 'z_video_tape',
 
             template : _.template([
@@ -118,7 +122,7 @@ define(function(require, exports, module) {
                 }));
             },
 
-            reset : function() {
+            initPlayer : function() {
                 var $elem = this.$el,
 
                     width = $elem.width(),
@@ -229,7 +233,7 @@ define(function(require, exports, module) {
                                 vendor : data.vendor || vendor
                             }));
 
-                            item.reset();
+                            item.initPlayer();
                         }, this);
                     } else {
                         remote.each(function(model) {
@@ -244,7 +248,7 @@ define(function(require, exports, module) {
                                 vendor : data.vendor || vendor
                             }));
 
-                            item.reset();
+                            item.initPlayer();
                         }, this);
                     }
                 } else {
@@ -262,7 +266,7 @@ define(function(require, exports, module) {
                             vendor : $elem.data('vendor') || vendor
                         }));
 
-                        item.reset();
+                        item.initPlayer();
                     }, this);
                 }
 
@@ -273,13 +277,12 @@ define(function(require, exports, module) {
                         video : video
                     }));
 
-                    item.reset();
+                    item.initPlayer();
                 }
 
                 this.cache();
                 this.show(current);
             }
-
         });
         
 

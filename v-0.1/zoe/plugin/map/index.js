@@ -1,10 +1,17 @@
+// 地图组件，使用了百度地图api
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
     // 加载对应的css文件
     require('./style.css');
 
 
-    var bmap = require('tool/bmap'),
+    var // 引入百度地图api
+        // 已经使用cmd封装，可是百度地图的api回调
+        // 使用的是BMap这个全局变量，所以无法完全封装
+        // 万恶的百度
+        bmap = require('tool/bmap'),
 
         Map = bmap.Map,
         Point = bmap.Point,
@@ -27,12 +34,12 @@ define(function(require, exports, module) {
 
 
     var defaults = {
-        'lat'      : 39.943146, //纬度
-        'lng'      : 116.337284, //经度
-        'zoom'     : 13, //地图缩放级别
-        'nav'      : false, //是否添加导航控件
-        'overview' : false, //是否添加右下角缩略图
-        'offset'   : 0.02, //中心点偏移量
+        'lat'      : 39.943146, // 纬度
+        'lng'      : 116.337284, // 经度
+        'zoom'     : 13, // 地图缩放级别
+        'offset'   : 0.02, // 中心点偏移量
+        'nav'      : false, // 是否添加导航控件
+        'overview' : false, // 是否添加右下角缩略图
         'icon'     : {
             url    : 'http://img4.bitauto.com/dealer/dealersite/20140626/images/map_i24.png',
             size   : { w: 28, h: 35 },
@@ -43,12 +50,19 @@ define(function(require, exports, module) {
                     fn : function () { }
                 }
             ]
-        }, //自定义标点信息
+        }, // 自定义标点信息
         'label'    : {
             style : {
                 'border-color' : '#ccc'
-            }
-        },
+            },
+            template : _.template([
+
+                '<div class="z_map_label">',
+                    '<%= content %>',
+                '</div>'
+
+            ].join(''))
+        }, // 自定义浮层信息
 
         'speed'    : 300,
         'current'  : 0
@@ -57,14 +71,6 @@ define(function(require, exports, module) {
 
     var MapSite = View.extend({
             className : 'z_map_site',
-
-            labelTmpl : _.template([
-
-                '<div class="z_map_label">',
-                    '<%= content %>',
-                '</div>'
-
-            ].join('')),
 
             initialize : function(options) {
                 this.itemId = options.itemId;
@@ -75,6 +81,7 @@ define(function(require, exports, module) {
                 this.position = new Point(this.lng, this.lat);
             },
 
+            // 初始化标点
             initMarker : function(options) {
                 var map = this.map,
                     center = this.position,
@@ -121,15 +128,19 @@ define(function(require, exports, module) {
                     map = this.map,
                     center = this.position,
 
-                    labelTmpl = this.labelTmpl,
                     labelContent,
                     labelOffset,
                     label;
 
                 if (options) {
-                    labelContent = labelTmpl({
-                        content : $elem.html()
-                    });
+                    if (options.template) {
+                        labelContent = options.template({
+                            content : $elem.html()
+                        });
+                    } else {
+                        labelContent = $elem.html();
+                    }
+
                     labelOffset = new Size(-width / 2 + 18, -height - 45);
                     label = new Label(labelContent, { offset : labelOffset, position : center});
 
@@ -148,6 +159,9 @@ define(function(require, exports, module) {
                     lng = this.lng,
                     lat = this.lat + offset;
 
+                // 如果传入silent参数
+                // 则为初始化地图位置
+                // 使用map的centerAndZoom接口
                 if (silent) {
                     map.centerAndZoom(new Point(lng, lat), zoom);
                 } else {
@@ -157,7 +171,6 @@ define(function(require, exports, module) {
         }),
 
         MapView = Panel.extend({
-
             template : [
 
                 '<div class="z_map_view"></div>',
@@ -181,6 +194,7 @@ define(function(require, exports, module) {
                     options = this.options,
                     hasNav = options.nav,
                     hasOrv = options.overview,
+                    
                     map;
 
                 $items.detach();
@@ -223,10 +237,10 @@ define(function(require, exports, module) {
 
                     options = this.options,
                     current = options.current,
-                    icon = options.icon,
-                    label = options.label,
                     lat = options.lat,
                     lng = options.lng,
+                    icon = options.icon,
+                    label = options.label,
                     remote = options.remote,
                     template = options.template;
 
