@@ -4,9 +4,7 @@
 
 define(function(require, exports, module) {
 
-    var queue = require('tool/queue'),
-
-        $ = require('jquery'),
+    var $ = require('jquery'),
         _ = require('underscore'),
 
         View = require('backbone').View;
@@ -27,6 +25,8 @@ define(function(require, exports, module) {
             },
 
             show : function(silent) {
+                silent = silent || !this.speed;
+
                 if (silent) {
                     this.$el.show();
                 } else {
@@ -49,9 +49,6 @@ define(function(require, exports, module) {
             initialize : function(options) {
                 this.options = _.defaults(options, defaults);
 
-                // 这里的队列是用于处理效果的触发
-                // 以免出现漏帧
-                this.queue = queue(this);
                 this.visible = true;
                 this.items = [];
                 this.controls = [];
@@ -107,26 +104,24 @@ define(function(require, exports, module) {
                             var itemId = data.id || void 0,
                                 item;
 
-                            item = new SliderItem({
+                            this.addItem(item = new SliderItem({
                                 itemId : itemId,
                                 speed : speed
-                            });
-                            item.$el.html(template(data));
+                            }));
 
-                            this.addItem(item);
+                            item.$el.html(template(data));
                         })
                     } else {
                         remote.each(function(model) {
                             var itemId = model.id || model.cid,
                                 item;
 
-                            item = new SliderItem({
+                            this.addItem(item = new SliderItem({
                                 itemId : itemId,
                                 speed : speed
-                            });
-                            item.$el.html(template(model.toJSON()));
+                            }));
 
-                            this.addItem(item);
+                            item.$el.html(template(model.toJSON()));
                         }, this);
                     }
                 } else {
@@ -134,13 +129,12 @@ define(function(require, exports, module) {
                         var itemId = elem.id || void 0,
                             item;
 
-                        item = new PanelItem({
+                        this.addItem(item = new PanelItem({
                             itemId : itemId,
                             speed : speed
-                        });
-                        item.$el.html(elem);
+                        }));
 
-                        this.addItem(item);
+                        item.$el.html(elem);
                     }, this);
                 }
 
@@ -266,7 +260,6 @@ define(function(require, exports, module) {
 
                 this.listenTo(control, 'update', this.show);
             }
-            
         });
 
 

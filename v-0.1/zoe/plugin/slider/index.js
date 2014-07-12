@@ -8,7 +8,9 @@ define(function(require, exports, module) {
     require('./style.css');
 
 
-    var $ = require('jquery'),
+    var queue = require('tool/queue'),
+
+        $ = require('jquery'),
         _ = require('underscore'),
 
         View = require('backbone').View,
@@ -65,6 +67,13 @@ define(function(require, exports, module) {
             initialize : function(options) {
                 options = _.defaults(options, defaults);
 
+                // 这里的队列是用于处理效果的触发
+                // 以免出现漏帧
+                this.queue = queue(this);
+                
+                this.fxFade = false;
+                this.fxAuto = false;
+
                 Panel.prototype.initialize.call(this, options);
 
                 if (options.nav) {
@@ -102,9 +111,6 @@ define(function(require, exports, module) {
                     this.page.$el.addClass('z_slider_page');
                     this.addControl(this.page, true);
                 }
-                
-                this.fxFade = false;
-                this.fxAuto = false;
 
                 if (options.nav && options.hover) {
                     this.fxActive = {
@@ -169,24 +175,22 @@ define(function(require, exports, module) {
                             var itemId = data.id || void 0,
                                 item;
 
-                            item = new SliderItem({
+                            this.addItem(item = new SliderItem({
                                 itemId : itemId
-                            });
-                            item.$el.html(template(data));
+                            }));
 
-                            this.addItem(item);
+                            item.$el.html(template(data));
                         }, this)
                     } else {
                         remote.each(function(model) {
                             var itemId = model.id || model.cid,
                                 item;
 
-                            item = new SliderItem({
+                            this.addItem(item = new SliderItem({
                                 itemId : itemId
-                            });
-                            item.$el.html(template(model.toJSON()));
+                            }));
 
-                            this.addItem(item);
+                            item.$el.html(template(model.toJSON()));
                         }, this);
                     }
                 } else {
@@ -194,12 +198,11 @@ define(function(require, exports, module) {
                         var itemId = elem.id || void 0,
                             item;
 
-                        item = new SliderItem({
+                        this.addItem(item = new SliderItem({
                             itemId : itemId
-                        });
+                        }));
+                        
                         item.$el.html(elem);
-
-                        this.addItem(item);
                     }, this);
                 }
 

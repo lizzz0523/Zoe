@@ -64,7 +64,7 @@ define(function(require, exports, module) {
             ].join(''))
         }, // 自定义浮层信息
 
-        'speed'    : 300,
+        'speed'    : true,
         'current'  : 0
     };
 
@@ -74,7 +74,9 @@ define(function(require, exports, module) {
 
             initialize : function(options) {
                 this.itemId = options.itemId;
-                this.map = options.map,
+                this.speed = options.speed;
+
+                this.map = options.map;
                 this.lng = options.lng || 0;
                 this.lat = options.lat || 0;
 
@@ -159,6 +161,8 @@ define(function(require, exports, module) {
                     lng = this.lng,
                     lat = this.lat + offset;
 
+                silent = silent || !this.speed;
+
                 // 如果传入silent参数
                 // 则为初始化地图位置
                 // 使用map的centerAndZoom接口
@@ -236,6 +240,7 @@ define(function(require, exports, module) {
                     map = this.map,
 
                     options = this.options,
+                    speed = options.speed,
                     current = options.current,
                     lat = options.lat,
                     lng = options.lng,
@@ -250,16 +255,15 @@ define(function(require, exports, module) {
                             var itemId = data.id || void 0,
                                 item;
 
-                            item = new MapSite({
+                            this.addItem(item = new MapSite({
                                 itemId : itemId,
+                                speed : speed,
                                 map : map,
                                 lat : data.lat || lat,
                                 lng : data.lng || lng
-                            });
+                            }));
+
                             item.$el.html(template(data));
-
-                            this.addItem(item);
-
                             item.initMarker(icon);
                             item.initLabel(label);
                         }, this);
@@ -268,16 +272,15 @@ define(function(require, exports, module) {
                             var itemId = model.id || model.cid,
                                 item;
 
-                            item = new MapSite({
+                            this.addItem(item = new MapSite({
                                 itemId : itemId,
+                                speed : speed,
                                 map : map,
                                 lat : model.get('lat') || lat,
                                 lng : model.get('lng') || lng
-                            });
+                            }));
+
                             item.$el.html(template(model.toJSON()));
-
-                            this.addItem(item);
-
                             item.initMarker(icon);
                             item.initLabel(label);
                         }, this);
@@ -289,16 +292,15 @@ define(function(require, exports, module) {
                             itemId = elem.id || void 0,
                             item;
 
-                        item = new MapSite({
+                        this.addItem(item = new MapSite({
                             itemId : itemId,
+                            speed : speed,
                             map : map,
                             lat : $elem.data('lat') || lat,
                             lng : $elem.data('lng') || lng
-                        });
+                        }));
+
                         item.$el.html(elem);
-
-                        this.addItem(item);
-
                         item.initMarker(icon);
                         item.initLabel(label);
                     }, this);
@@ -306,6 +308,7 @@ define(function(require, exports, module) {
 
                 if (!this.size()) {
                     this.addItem(item = new MapSite({
+                        speed : speed,
                         map : map,
                         lat : lat,
                         lng : lng
@@ -338,6 +341,8 @@ define(function(require, exports, module) {
                         items[curIndex].show(true);
                     }
                 }
+
+                if (index == void 0) return;
 
                 index = this.validIndex(index);
                 if (curIndex == index) return;

@@ -159,6 +159,8 @@ define(function(require, exports, module) {
             },
 
             show : function(silent) {
+                silent = silent || !this.speed;
+
                 if (silent) {
                     this.$el.show();
                 } else {
@@ -169,13 +171,11 @@ define(function(require, exports, module) {
             hide : function() {
                 this.$el.hide();
             }
-
         }, {
             ID_PREFIX : 'z_video_'
         }),
 
         Video = Panel.extend({
-
             template : [
 
                 '<div class="z_video_view"></div>'
@@ -213,8 +213,8 @@ define(function(require, exports, module) {
                     items = this.items,
 
                     options = this.options,
-                    current = options.current,
                     speed = options.speed,
+                    current = options.current,
                     video = options.video,
                     vendor = options.vendor,
                     remote = options.remote,
@@ -228,7 +228,7 @@ define(function(require, exports, module) {
                             
                             this.addItem(item = new VideoTape({
                                 itemId : itemId,
-                                speed : data.speed || speed,
+                                speed : speed,
                                 video : data.video || video,
                                 vendor : data.vendor || vendor
                             }));
@@ -243,7 +243,7 @@ define(function(require, exports, module) {
                             
                             this.addItem(item = new VideoTape({
                                 itemId : itemId,
-                                speed : data.speed || speed,
+                                speed : speed,
                                 video : data.video || video,
                                 vendor : data.vendor || vendor
                             }));
@@ -261,7 +261,7 @@ define(function(require, exports, module) {
 
                         this.addItem(item = new VideoTape({
                             itemId : itemId,
-                            speed : $elem.data('speed') || speed,
+                            speed : speed,
                             video : $elem.data('video') || $link.attr('href') || video,
                             vendor : $elem.data('vendor') || vendor
                         }));
