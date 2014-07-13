@@ -27,48 +27,9 @@ define(function(require, exports, module) {
         },
 
         special = {
-            'letv' : {
-                player : 'http://img1.bitautoimg.com/video/player/letv_yiche140611.swf',
-                vars : function(id) {
-                    return {
-                        file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayInfo?videoid=' + id,
-                        pver : 'website'
-                    };
-                },
-                rvideo : /^http:\/\/\S+\/([^\/]+).html$/gi
-            },
-
-            'bita' : {
-                player : 'http://img4.bitautoimg.com/video/js/flvPlayer-end.swf',
-                vars : function(id) {
-                    return {
-                        file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayVideoInfo?id=' + id
-                    }
-                },
-                rvideo : /^http:\/\/\S+\/([^\/]+).html$/gi
-            },
-
-            'youku' : {
-                player : function(id) {
-                    return 'http://player.youku.com/player.php/sid/{id}/v.swf'.replace(/\{id\}/gi, id);
-                },
-                vars : {
-                    isAutoPlay : false,
-                    noCookie : 0
-                },
-                rvideo : /^http:\/\/\S+\/id_([^\/]+).html$/gi
-            },
-
-            'tudou' : {
-                player : function(id) {
-                    return 'http://www.tudou.com/v/{id}/&icode={id}/v.swf'.replace(/\{id\}/gi, id);
-                },
-                vars : {
-                    auto : 0,
-                    widthAD : false,
-                    noCookie : 0
-                },
-                rvideo : /^http:\/\/\S+\/([^\/]+).html$/gi
+            defaults : {
+                vars   : { },
+                rpath : /^http:\/\/\S+\/([^\/]+).html$/gi
             }
         };
 
@@ -101,8 +62,8 @@ define(function(require, exports, module) {
                     vendor = special[vendor] || special[defaults.vendor];
                 }
 
-                if (_.isString(video) && video.match(vendor.rvideo)) {
-                    video = video.replace(vendor.rvideo, function(all, video) {
+                if (_.isString(video) && video.match(vendor.rpath)) {
+                    video = video.replace(vendor.rpath, function(all, video) {
                         return video;
                     });
                 }
@@ -237,15 +198,14 @@ define(function(require, exports, module) {
                         }, this);
                     } else {
                         remote.each(function(model) {
-                            var data = model.toJSON(),
-                                itemId = data.id || void 0,
+                            var itemId = model.get('id') || void 0,
                                 item;
                             
                             this.addItem(item = new VideoTape({
                                 itemId : itemId,
                                 speed : speed,
-                                video : data.video || video,
-                                vendor : data.vendor || vendor
+                                video : model.get('video') || video,
+                                vendor : model.get('vendor') || vendor
                             }));
 
                             item.initPlayer();
@@ -283,7 +243,54 @@ define(function(require, exports, module) {
                 this.cache();
                 this.show(current);
             }
+        }, {
+            register : function(vendor, options) {
+                if (!options.player) return;
+                special[vendor] = _.defaults(options, special.defaults);
+            }
         });
+
+
+    Video.register('bita', {
+        player : 'http://img4.bitautoimg.com/video/js/flvPlayer-end.swf',
+        vars : function(id) {
+            return {
+                file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayVideoInfo?id=' + id
+            }
+        }
+    });
+
+    Video.register('letv', {
+        player : 'http://img1.bitautoimg.com/video/player/letv_yiche140611.swf',
+        vars : function(id) {
+            return {
+                file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayInfo?videoid=' + id,
+                pver : 'website'
+            };
+        }
+    });
+
+    Video.register('youku', {
+        player : function(id) {
+            return 'http://player.youku.com/player.php/sid/{id}/v.swf'.replace(/\{id\}/gi, id);
+        },
+        vars : {
+            isAutoPlay : false,
+            noCookie : 0
+        },
+        rpath : /^http:\/\/\S+\/id_([^\/]+).html$/gi
+    });
+
+    Video.register('tudou', {
+        player : function(id) {
+            return 'http://www.tudou.com/v/{id}/&icode={id}/v.swf'.replace(/\{id\}/gi, id);
+        },
+        vars : {
+            auto : 0,
+            withAD : false,
+            noCookie : 0
+        }
+    });
         
 
     module.exports = Video;
