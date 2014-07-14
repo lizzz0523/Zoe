@@ -37,6 +37,19 @@ Event.prototype = {
         return callback;
     },
 
+    one : function(name, callback) {
+        var self = this,
+            once = _.once(function() {
+                self.off(name, once);
+                callback.apply(this, arguments);
+            });
+
+        this.on(name, once);
+        callback.eventId = once.eventId;
+
+        return callback;
+    },
+
     off : function(name, callback) {
         var events = cache.get(this, settings.CACHE),
             handlers = events[name],
@@ -93,7 +106,7 @@ Event.prototype = {
 
 Event.global = new Event(window);
 
-_.each('on off emit'.split(' '), function(value) {
+_.each('on one off emit'.split(' '), function(value) {
     Event.create[value] = function() {
         Event.global[value].apply(Event.global, arguments);
     };

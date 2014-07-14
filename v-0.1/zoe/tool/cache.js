@@ -10,7 +10,7 @@ var hook = 'cache-' + _.uniqueId(),
     
     cache = [],
     // 自增
-    cacheId = 0;
+    cacheId = 1;
     
 function cacheData(key, value) {
     var id = this[hook],
