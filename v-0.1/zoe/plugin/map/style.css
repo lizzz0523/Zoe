@@ -1,5 +1,6 @@
 .z_map {
     position: relative;
+    overflow: hidden;
 }
 
 .z_map .z_map_view {
@@ -9,19 +10,21 @@
 
 .z_map .z_map_asset {
     position: absolute;
-    top: 0;
+    top: -100%;
     left: 0;
     width: 100%;
     height: 100%;
 }
-.z_map .z_map_site,
-.z_map .z_map_label {
+.z_map .z_map_site {
     padding: 5px 20px;
     width: 260px;
+    border: 1px solid white;
 }
 .z_map .z_map_label {
+    padding: 4px 19px;
+    width: 260px;
     z-index: 3;
-    background: #fff;
+    background-color: #fff;
 }
 .z_map .z_map_label:after {
     content: '';

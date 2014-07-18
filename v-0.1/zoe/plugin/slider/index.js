@@ -5,6 +5,7 @@
 define(function(require, exports, module) {
 
     // 加载对应的css文件
+
     require('./style.css');
 
 
@@ -13,44 +14,48 @@ define(function(require, exports, module) {
         $ = require('jquery'),
         _ = require('underscore'),
 
-        View = require('backbone').View,
-        
-        Panel = require('plugin/panel/index'),
-        Menu = require('plugin/menu/index'),
-        Page = require('plugin/page/index');
+        ZView = require('plugin/view/index'),
+        ZPanel = require('plugin/panel/index'),
+        ZMenu = require('plugin/menu/index'),
+        ZPage = require('plugin/page/index');
 
 
     var defaults = {
             'nav'      : false,
             'page'     : false,
             'auto'     : true,
-            'loop'     : true,
-            'hover'    : true,
-            'vertical' : false,
             'interval' : 5000,
+            'hover'    : true,
+            'loop'     : true,
+            'vertical' : false,
 
-            'speed'    : 300,
-            'current'  : 0
+            
+            // 由于slider是空间上的变换，需要比panel更长的变换时间
+
+            'speed'    : 500
         };
 
 
-    var SliderItem = View.extend({
-            className : 'z_slider_item',
+    var ZBlock = ZView.extend({
+            terminal : true,
 
-            initialize : function(options) {
-                this.itemId = options.itemId;
-            },
+            reset : function() {
+                var $elem = this.$el,
+                    $items = $elem.children();
 
-            show : function() {
-                this.$el.show();
-            },
+                $items.detach();
 
-            hide : function() {
-                this.$el.hide();
+                $elem.html(this.template({}));
+                $elem.addClass('z_slider_block');
+
+                this.$items = $items;
+                this.$inner = $elem;
+
+                return this;
             }
         }),
 
-        Slider = Panel.extend({
+        ZSlider = ZPanel.extend({
             template : [
 
                 '<div class="z_slider_view">',
@@ -65,76 +70,28 @@ define(function(require, exports, module) {
             },
 
             initialize : function(options) {
-                options = _.defaults(options, defaults);
+                _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
+
 
                 // 这里的队列是用于处理效果的触发
                 // 以免出现漏帧
+
                 this.queue = queue(this);
                 
                 this.fxFade = false;
                 this.fxAuto = false;
 
-                Panel.prototype.initialize.call(this, options);
-
-                if (options.nav) {
-                    this.nav = {
-                        remote   : [],
-                        template : _.template('<a href="#nav:<%= target %>"><%= text %></a>'),
-                        pattern  : /^nav:([\d\w][\d\w\s\-]*)$/,
-                        repeat   : true
-                    };
-
-                    this.navNext = new Menu(_.extend(this.nav, {
-                        remote : [{
-                            target : 'next',
-                            text : '&gt;'
-                        }]
-                    }));
-                    this.navNext.$el.addClass('z_slider_nav z_slider_next');
-                    this.addControl(this.navNext, true);
-
-                    this.navPrev = new Menu(_.extend(this.nav, {
-                        remote : [{
-                            target : 'prev',
-                            text : '&lt;'
-                        }]
-                    }));
-                    this.navPrev.$el.addClass('z_slider_nav z_slider_prev');
-                    this.addControl(this.navPrev, true);
-                }
-
-                if (options.page) {
-                    this.page = new Page({
-                        total : this.size(),
-                        current : options.current
-                    });
-                    this.page.$el.addClass('z_slider_page');
-                    this.addControl(this.page, true);
-                }
-
-                if (options.nav && options.hover) {
-                    this.fxActive = {
-                        timeId : setTimeout(_.bind(this.active, this, false), 2000)
-                    }
-                }
-
-                if (options.auto) {
-                    this.fxPlay = {
-                        timeId : setInterval(_.bind(this.play, this), options.interval),
-                        locked : false
-                    }
-                }
+                ZPanel.prototype.initialize.call(this, options);
             },
 
-            render : function() {
+            reset : function() {
                 var $elem = this.$el,
                     $items = $elem.children(),
                     
                     $view,
                     $slider,
 
-                    options = this.options,
-                    vertical = options.vertical;
+                    vertical = this.vertical;
 
                 $items.detach();
 
@@ -155,64 +112,56 @@ define(function(require, exports, module) {
 
                 this.$view = $view;
                 this.$slider = $slider;
+
+                return this;
             },
 
-            reset : function() {
-                var $items = this.$items,
+            render : function() {
+                var collection = this.collection,
 
-                    items = this.items,
+                    tmpl = this.tmpl,
+                    init = this.init;
 
-                    options = this.options,
-                    current = options.current,
-                    remote = options.remote,
-                    template = options.template;
+                collection.each(function(model) {
+                    var item = new ZBlock({
+                            zid   : model.id || model.cid,
 
-                if (remote && template && _.isFunction(template)) {
-                    // 如果数据来源外部
-                    // 则需要根据模板重新渲染
-                    if (_.isArray(remove)) {
-                        _.each(remote, function(data) {
-                            var itemId = data.id || void 0,
-                                item;
+                            data  : model.toJSON(),
+                            tmpl  : tmpl
+                        });
 
-                            this.addItem(item = new SliderItem({
-                                itemId : itemId
-                            }));
-
-                            item.$el.html(template(data));
-                        }, this)
-                    } else {
-                        remote.each(function(model) {
-                            var itemId = model.id || model.cid,
-                                item;
-
-                            this.addItem(item = new SliderItem({
-                                itemId : itemId
-                            }));
-
-                            item.$el.html(template(model.toJSON()));
-                        }, this);
-                    }
-                } else {
-                    _.each($items, function(elem) {
-                        var itemId = elem.id || void 0,
-                            item;
-
-                        this.addItem(item = new SliderItem({
-                            itemId : itemId
-                        }));
-                        
-                        item.$el.html(elem);
-                    }, this);
-                }
+                    this.append(item.render().el);
+                    this.addItem(item);
+                }, this);
 
                 this.cache();
-                this.show(current);
+                this.start(init);
+
+                return this;
+            },
+
+            build : function() {
+                var $items = this.$items,
+
+                    init = this.init;
+
+                _.each($items, function(elem) {
+                    var item = new ZBlock({
+                            zid   : elem.id || void 0
+                        });
+
+                    this.append(item.stack(elem).build().el);
+                    this.addItem(item);
+                }, this);
+
+                this.cache();
+                this.start(init);
+
+                return this;
             },
 
             validIndex : function(index) {
-                var options = this.options,
-                    loop = options.loop,
+                var loop = this.loop,
 
                     minIndex = this.minIndex,
                     maxIndex = this.maxIndex;
@@ -246,33 +195,105 @@ define(function(require, exports, module) {
                 return index;
             },
 
-            updateIndex : function(index) {
-                Panel.prototype.updateIndex.call(this, index);
+            start : function(init) {
+                if (this.nav) {
+                    this.nav = {
+                        tmpl    : _.template('<a href="#nav/<%= target %>"><%= text %></a>'),
+                        pattern : /^nav\/([\d\w][\d\w\s\-]*)$/,
+                        repeat  : true
+                    };
+
+                    this.navNext = new ZMenu(_.extend(this.nav, {
+                        data : {
+                            target : 'next',
+                            text : '&gt;'
+                        }
+                    }));
+                    this.navNext.$el.addClass('z_slider_nav z_slider_next');
+
+                    this.append(this.navNext.render().el, true);
+                    this.addControl(this.navNext);
+
+                    this.navPrev = new ZMenu(_.extend(this.nav, {
+                        data : {
+                            target : 'prev',
+                            text : '&lt;'
+                        }
+                    }));
+                    this.navPrev.$el.addClass('z_slider_nav z_slider_prev');
+
+                    this.append(this.navPrev.render().el, true);
+                    this.addControl(this.navPrev);
+                }
 
                 if (this.page) {
-                    this.page.active(this.curIndex);
+                    this.page = {
+                        data : new Array(this.size()),
+                        init  : init
+                    };
+
+                    this.pageBtn = new ZPage(this.page);
+                    this.pageBtn.$el.addClass('z_slider_page');
+
+                    this.append(this.pageBtn.render().el, true);
+                    this.addControl(this.pageBtn);
+                }
+
+                if (this.nav && this.hover) {
+                    this.fxActive = {
+                        timeId : setTimeout(_.bind(this.active, this, false), 2000)
+                    }
+                }
+
+                if (this.auto) {
+                    this.fxPlay = {
+                        timeId : setInterval(_.bind(this.play, this), this.interval),
+                        locked : false
+                    }
+                }
+
+                this.show(init);
+            },
+
+            updateIndex : function(index) {
+                ZPanel.prototype.updateIndex.call(this, index);
+
+                if (this.pageBtn) {
+                    this.pageBtn.active(this.curIndex);
                 }
             },
 
             show : function(index) {
-                var items = this.items,
-                    curIndex = this.curIndex;
+                var $elem = this.$el,
 
-                if (!this.visible) {
-                    this.$el.show();
-                    this.visible = true;
+                    items = this.items,
+                    curIndex = this.curIndex,
+                    
+                    next,
 
-                    if (curIndex != -1) {
-                        items[curIndex].show();
+                    visible = this.visible;
+
+                if (!visible) {
+                    $elem.show();
+                }
+
+                if (index != void 0) {
+                    // 判断传入的index是否next或者prev
+
+                    next = String(index).match(/^next|prev$/)
+                    ? index == 'next'
+                    : void 0;
+
+                    index = this.validIndex(index);
+                    
+                    if (curIndex != index) {
+                        this.slideBuffer(index, next);
                     }
                 }
 
-                if (index == void 0) return;
+                this.visible = true;
 
-                index = this.validIndex(index);
-                if (curIndex == index) return;
-
-                this.slideBuffer(index, String(index).match(/^next|prev$/) && index == 'next');
+                return this;
             },
 
             slideBuffer : function(index, next) {
@@ -282,13 +303,15 @@ define(function(require, exports, module) {
 
                     queue = this.queue,
                     qname = 'slide',
-                    size = queue.size(qname);
+                    qsize = queue.size(qname);
 
                 queue.clear(qname);
 
+
+                // curIndex == -1
+                // 说明控件仍未初始化
+
                 if (curIndex == -1) {
-                    // curIndex == -1
-                    // 说明控件仍未初始化
 
                     queue.add(qname, function(){
                         _.defer(function(){
@@ -309,6 +332,7 @@ define(function(require, exports, module) {
                         // 加一个160毫秒的delay
                         // 可以减缓响应速度
                         // 感觉更真实
+                        
                         _.delay(function(){
                             queue.next(qname);
                         }, 160);
@@ -325,7 +349,7 @@ define(function(require, exports, module) {
                     });
                 }
 
-                if (!size && !animated) {
+                if (!qsize && !animated) {
                     queue.next(qname);
                 }
 
@@ -341,15 +365,15 @@ define(function(require, exports, module) {
                     items = this.items,
                     type;
 
-                items[index].show();
-
                 if (_.isBoolean(next) ? next : index > curIndex) {
-                    type = Slider.TYPE_NEXT;
-                    items[index].$el.appendTo($slider);
+                    type = ZSlider.TYPE_NEXT;
+                    this.append(items[index].el);
                 } else {
-                    type = Slider.TYPE_PREV;
-                    items[index].$el.prependTo($slider);
+                    type = ZSlider.TYPE_PREV;
+                    this.prepend(items[index].el);
                 }
+
+                items[index].show();
 
                 if (_.isFunction(callback)) {
                     callback = _.wrap(callback, function(callback) {
@@ -358,7 +382,7 @@ define(function(require, exports, module) {
                     });
                 } else {
                     callback = function() {
-                        this.items[prevIndex].hide();
+                        this.items[curIndex].hide();
                     }
                 }
 
@@ -368,14 +392,13 @@ define(function(require, exports, module) {
             slide : function(type, callback) {
                 var $slider = this.$slider,
 
-                    options = this.options,
-                    vertical = options.vertical,
+                    vertical = this.vertical,
 
                     init = {},
                     dest = {};
 
                 switch (type) {
-                    case Slider.TYPE_PREV :
+                    case ZSlider.TYPE_PREV :
                         if (vertical) {
                             init.top = '-100%';
                             dest.top = '0';
@@ -386,7 +409,7 @@ define(function(require, exports, module) {
 
                         break;
 
-                    case Slider.TYPE_NEXT :
+                    case ZSlider.TYPE_NEXT :
                         if (vertical) {
                             init.top = '0';
                             dest.top = '-100%';
@@ -450,6 +473,6 @@ define(function(require, exports, module) {
         });
 
 
-    module.exports = Slider;
+    module.exports = ZSlider;
 
 });

@@ -95,6 +95,7 @@ Event.prototype = {
             args = [].slice.call(arguments, 1);
 
         if (!handlers) return;
+        handlers = _.clone(handlers);
         len = handlers.length;
 
         while (++i < len) {

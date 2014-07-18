@@ -1,5 +1,6 @@
 .z_video {
     position: relative;
+    overflow: hidden;
 }
 
 .z_video .z_video_view {

@@ -1,3 +1,4 @@
+
 // 翻页组件
 // by lizzz (http://lizzz0523.github.io/)
 
@@ -8,67 +9,89 @@ define(function(require, exports, module) {
         $ = require('jquery'),
         _ = require('underscore'),
 
-        View = require('backbone').View;
+        ZView = require('plugin/view/index');
 
 
     var defaults = {
-            'current'  : 0,
-            'total'    : 0,
-
-            'pattern'  : /^page:([\d\w][\d\w\s]*)$/,
-            'template' : _.template([
-
-                '<% for (var i = 0; i < total; i++) { %>',
-                    '<a href="#page:<%= i %>"><%= i + 1 %></a>',
-                '<% } %>'
-
-            ].join(''))
+            'pattern' : /^page\/([\d\w][\d\w\s]*)$/,
+            'total'   : 0,
+            'init'    : 0
         };
 
 
-    var Pagination = View.extend({
+    var ZPage = ZView.extend({
+            terminal : true,
+
+            tmpl : _.template([
+
+                '<a href="#page/<%= index %>"><%= index + 1 %></a>',
+
+            ].join('')),
+
             events : {
                 'click a' : 'clickPage'
             },
 
             initialize : function(options) {
-                this.options = _.defaults(options, defaults);
+                _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
-                this.render();
-                this.reset();
-            },
-
-            render : function(total) {
-                var $elem = this.$el,
-                    $pages,
-
-                    options = this.options,
-                    template = options.template,
-                    total = options.total;
-
-                $elem.html(template({
-                    total : total
-                }));
-                $elem.addClass('z_page');
-
-                $pages = this.$('a');
-
-                this.$pages = $pages;
+                ZView.prototype.initialize.call(this, options);
             },
 
             reset : function() {
-                var options = this.options,
-                    current = options.current;
+                var $elem = this.$el,
+                    $items = $elem.children();
+
+                $items.detach();
+
+                $elem.html(this.template({}));
+                $elem.addClass('z_page');
+
+                this.$items = $items;
+                this.$inner = $elem;
+
+                return this;
+            },
+
+            render : function() {
+                var tmpl = this.tmpl,
+                    i = -1,
+                    total = this.collection.length,
+                    init = this.init;
+
+                while(++i < total) {
+                    this.append(tmpl({
+                        index : i
+                    }));
+                }
 
                 this.cache();
-                this.active(current);
+                this.active(init);
+
+                return this;
+            },
+
+            build : function() {
+                var tmpl = this.tmpl,
+                    i = -1,
+                    total = this.total,
+                    init = this.init;
+
+                while(++i < total) {
+                    this.append(tmpl({
+                        index : i
+                    }));
+                }
+
+                this.cache();
+                this.active(init);
+
+                return this;
             },
 
             cache : function() {
-                var $pages = this.$pages;
-
                 this.minPage = 0;
-                this.maxPage = $pages.length - 1;
+                this.maxPage = this.size() - 1;
                 this.curPage = -1;
             },
 
@@ -94,7 +117,7 @@ define(function(require, exports, module) {
             },
 
             active : function(page) {
-                var $pages = this.$pages,
+                var $pages = this.$('a'),
                     curPage = this.curPage;
 
                 page = this.validPage(page);
@@ -107,16 +130,8 @@ define(function(require, exports, module) {
                 this.trigger('update', this.curPage);
             },
 
-            show : function() {
-                this.$el.show();
-            },
-
-            hide : function() {
-                this.$el.hide();
-            },
-
-            total : function() {
-                return this.$pages.length;
+            size : function() {
+                return this.$('a').length;
             },
 
             current : function() {
@@ -124,24 +139,31 @@ define(function(require, exports, module) {
             },
 
             clickPage : function(event) {
-                var options = this.options,
-                    pattern = options.pattern,
+                var target = event.currentTarget,
+                    hash = target.getAttribute('href', 2),
 
-                    target = event.currentTarget,
-                    hash = target.getAttribute('href', 2);
+                    pattern = this.pattern;
 
                 event && event.preventDefault();
 
-                hash = utils.parseHash(hash);
-                hash = hash.match(pattern);
-
-                if (hash && (hash = hash.pop())) {
+                if (hash = this.parseHash(hash)) {
                     this.active(hash);
                 }
+            },
+
+            parseHash : function(hash) {
+                var pattern = this.pattern;
+
+                hash = utils.parseHash(hash);
+                if (pattern && (hash = hash.match(pattern))) {
+                    hash = hash.pop();
+                }
+
+                return hash;
             }
         });
 
 
-    module.exports = Pagination;
+    module.exports = ZPage;
 
 });

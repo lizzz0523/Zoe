@@ -8,140 +8,116 @@ define(function(require, exports, module) {
         $ = require('jquery'),
         _ = require('underscore'),
 
-        View = require('backbone').View;
+        ZView = require('plugin/view/index');
 
 
     var defaults = {
-            'repeat'   : false, //重复标志，由于现实按钮能否重复点击
-
-            'pattern'  : /^tab:([\d\w][\d\w\s\-]*)$/,
-            'template' : _.template([
-
-                '<a href="#tab:<%= target %>"><%= text %></a>'
-
-            ].join(''))
+            'pattern' : false,       
+            'repeat'  : false, //重复标志，由于现实按钮能否重复点击
+            'init'    : ''
         };
 
 
-    var Menu = View.extend({
+    var ZMenu = ZView.extend({
+            terminal : true,
+
+            tmpl : _.template([
+
+                '<a href="#<%= target %>"><%= text %></a>'
+
+            ].join('')),
+
             events : {
                 'click a' : 'clickTab'
             },
 
             initialize : function(options) {
-                this.options = _.defaults(options, defaults);
+                _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
-                this.render();
-
-                if (this.options.remote && !_.isArray(this.options.remote)) {
-                    this.listenTo(this.options.remote, 'reset', this.reset);
-                } else {
-                    this.reset();
-                }
-            },
-
-            render : function() {
-                var $elem = this.$el,
-                    $items = $elem.children();
-
-                $items.detach();
-                $elem.addClass('z_menu');
-
-                this.$items = $items;
+                ZView.prototype.initialize.call(this, options);
             },
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = this.$items,
+                    $items = $elem.children();
 
-                    options = this.options,
-                    current = options.current,
-                    remote = options.remote,
-                    template = options.template;
+                $items.detach();
 
-                if (remote && template && _.isFunction(template)) {
-                    if (_.isArray(remote)) {
-                        _.each(remote, function(data) {
-                            $elem.append(template(data));
-                        });
-                    } else {
-                        remote.each(function(model) {
-                            $elem.append(template(model.toJSON()));
-                        });
-                    }
-                } else {
-                    _.each($items, function(elem) {
-                        var $elem = $(elem);
-                            $tab = elem.nodeName.match(/a/i) ? $elem : $elem.find('a');
+                $elem.html(this.template({}));
+                $elem.addClass('z_menu');
 
-                        $tab.each(function() {
-                            var hash = this.getAttribute('href', 2);
-                            
-                            hash = utils.parseHash(hash);
+                this.$items = $items;
+                this.$inner = $elem;
 
-                            if (hash.length) {
-                                hash = 'tab:' + hash;
-                                this.setAttribute('href', '#' + hash);
-                            }
-                        });
-                    });
+                return this;
+            },
 
-                    $elem.html($items);
-                }
+            render : function() {
+                var collection = this.collection,
 
-                this.cache();
-                this.active(current);
+                    tmpl = this.tmpl,
+                    init = this.init;
+
+                this.collection.each(function(model) {
+                    this.append(tmpl(model.toJSON()));
+                }, this);
+
+                this.cache()
+                this.active(init);
+
+                return this;
+            },
+
+            build : function() {
+                var $items = this.$items,
+
+                    init = this.init;
+
+                _.each($items, function(elem) {
+                    this.append(elem);
+                }, this);
+
+                this.cache()
+                this.active(init);
+
+                return this;
             },
 
             cache : function() {
                 var $elem = this.$el,
                     $tabs = $elem.find('a'),
 
-                    options = this.options,
-                    pattern = options.pattern,
                     cache = {};
 
                 _.each($tabs, function(tab) {
                     var hash = tab.getAttribute('href', 2);
-                    
-                    hash = utils.parseHash(hash);
-                    hash = hash.match(pattern);
 
-                    if (hash && (hash = hash.pop())) {
+                    if (hash = this.parseHash(hash)) {
                         if (cache[hash]) {
                             cache[hash].push(tab);
                         } else {
                             cache[hash] = [tab];
                         }
                     }
-                });
+                }, this);
 
                 this.tab2Elem = cache;
             },
 
             active : function(tab) {
-                var options = this.options,
-                    repeat = options.repeat,
+                var tab2Elem = this.tab2Elem,
+                    curTab = this.curTab,
 
-                    tab2Elem = this.tab2Elem,
-                    curTab = this.curTab;
+                    repeat = this.repeat;
 
                 if (!tab2Elem[tab] || !repeat && tab == curTab) return;
 
                 _.each(tab2Elem, function(elem, key) {
                     $(elem).toggleClass('active', tab == key);
-                });
+                }, this);
 
                 this.curTab = tab;
                 this.trigger('update', this.curTab);
-            },
-
-            show : function() {
-                this.$el.show();
-            },
-
-            hide : function() {
-                this.$el.hide();
             },
 
             current : function() {
@@ -149,24 +125,29 @@ define(function(require, exports, module) {
             },
 
             clickTab : function(event) {
-                var options = this.options,
-                    pattern = options.pattern,
-
-                    target = event.currentTarget,
+                var target = event.currentTarget,
                     hash = target.getAttribute('href', 2);
 
                 event && event.preventDefault();
 
-                hash = utils.parseHash(hash);
-                hash = hash.match(pattern);
-
-                if (hash && (hash = hash.pop())) {
+                if (hash = this.parseHash(hash)) {
                     this.active(hash);
                 }
-            } 
+            },
+
+            parseHash : function(hash) {
+                var pattern = this.pattern;
+
+                hash = utils.parseHash(hash);
+                if (pattern && (hash = hash.match(pattern))) {
+                    hash = hash.pop();
+                }
+
+                return hash;
+            }
         });
 
 
-    module.exports = Menu;
+    module.exports = ZMenu;
 
 });

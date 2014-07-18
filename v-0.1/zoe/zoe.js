@@ -80,20 +80,6 @@ function zoe(callback) {
 _.extend(zoe, {
     event : event(zoe),
 
-    on : function(name, callback) {
-        zoe.event.on(name, callback);
-    },
-
-    off : function(name, callback) {
-        zoe.event.off(name, callback);
-    },
-
-    emit : function(name) {
-        zoe.event.emit(name);
-    }
-});
-
-_.extend(zoe, {
     views : {},
 
     zuid : 1,
@@ -105,6 +91,12 @@ _.extend(zoe, {
             return null;
         }
     }
+});
+
+_.each('on one off emit'.split(' '), function(method) {
+    zoe[method] = function() {
+        zoe.event[method].apply(zoe.event, arguments);
+    };
 });
 
 
@@ -132,12 +124,12 @@ $('[data-zoe]').each(function(index, elem) {
             ready++;
             require.async(tpath.replace(/\{s\}/g, viewData.plugin), function(View) {
                 view = new View(options);
-                zoe.views[viewId] = view;
+                zoe.views[viewId] = view.build();
 
                 if (viewBind) {
-                    zoe.on('bind', function() {
+                    zoe.one('bind', function() {
                         try {
-                            zoe.find(viewBind).addControl(view);
+                            zoe.find(viewBind).binding(view);
                         } catch(e) {
                             // do nothing
                         }

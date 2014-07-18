@@ -4,6 +4,7 @@
 define(function(require, exports, module) {
 
     // 加载对应的css文件
+    
     require('./style.css');
 
 
@@ -11,6 +12,7 @@ define(function(require, exports, module) {
         // 已经使用cmd封装，可是百度地图的api回调
         // 使用的是BMap这个全局变量，所以无法完全封装
         // 万恶的百度
+
         bmap = require('tool/bmap'),
 
         Map = bmap.Map,
@@ -28,9 +30,8 @@ define(function(require, exports, module) {
         $ = require('jquery'),
         _ = require('underscore'),
 
-        View = require('backbone').View,
-
-        Panel = require('plugin/panel/index');
+        ZView = require('plugin/view/index'),
+        ZPanel = require('plugin/panel/index');
 
 
     var defaults = {
@@ -38,6 +39,7 @@ define(function(require, exports, module) {
         'lng'      : 116.337284, // 经度
         'zoom'     : 13, // 地图缩放级别
         'offset'   : 0.02, // 中心点偏移量
+
         'nav'      : false, // 是否添加导航控件
         'overview' : false, // 是否添加右下角缩略图
         'icon'     : {
@@ -63,30 +65,78 @@ define(function(require, exports, module) {
 
             ].join(''))
         }, // 自定义浮层信息
-
-        'speed'    : true,
-        'current'  : 0
     };
 
 
-    var MapSite = View.extend({
-            className : 'z_map_site',
+    var ZSite = ZView.extend({
+            terminal : true,
 
             initialize : function(options) {
-                this.itemId = options.itemId;
-                this.speed = options.speed;
+                _.extend(this, _.pick(options, ['map', 'lat', 'lng', 'speed']));
 
-                this.map = options.map;
-                this.lng = options.lng || 0;
-                this.lat = options.lat || 0;
-
-                this.position = new Point(this.lng, this.lat);
+                ZView.prototype.initialize.call(this, options);
             },
 
+            reset : function() {
+                var $elem = this.$el,
+                    $items = $elem.children();
+
+                $items.detach();
+
+                $elem.html(this.template({}));
+                $elem.addClass('z_map_site');
+
+                this.$items = $items;
+                this.$inner = $elem;
+
+                return this;
+            },
+
+            show : function(offset, zoom, silent) {
+                var map = this.map,
+                    lng = this.lng,
+                    lat = this.lat + offset,
+                    center = new Point(lng, lat),
+
+                    speed = !silent && this.speed;
+
+                ZView.prototype.show.call(this);
+
+
+                // 如果传入silent参数
+                // 则为初始化地图位置
+                // 使用map的centerAndZoom接口
+
+                if (!speed) {
+                    map.centerAndZoom(center, zoom);
+                } else {
+                    map.panTo(center);
+                }
+
+                return this;
+            },
+            
+
+            // match方法是用于判断地图当前是否对准某个site
+
+            match : function(offset) {
+                var map = this.map,
+                    lng = this.lng,
+                    lat = this.lat + offset,
+                    center = map.getCenter();
+                
+                return center.lng === lng && center.lat === lat;
+            },
+
+
             // 初始化标点
+            // 具体操作查看百度地图api
+
             initMarker : function(options) {
                 var map = this.map,
-                    center = this.position,
+                    lng = this.lng,
+                    lat = this.lat,
+                    center = new Point(lng, lat),
 
                     iconSize,
                     iconAnchor,
@@ -121,6 +171,10 @@ define(function(require, exports, module) {
                 this.marker = marker;
             },
 
+
+            // 初始化浮层信息
+            // 具体操作查看百度地图api
+
             initLabel : function(options) {
                 var $elem = this.$el,
                     
@@ -128,7 +182,9 @@ define(function(require, exports, module) {
                     height = $elem.outerHeight(true),
 
                     map = this.map,
-                    center = this.position,
+                    lng = this.lng,
+                    lat = this.lat,
+                    center = new Point(lng, lat),
 
                     labelContent,
                     labelOffset,
@@ -143,7 +199,7 @@ define(function(require, exports, module) {
                         labelContent = $elem.html();
                     }
 
-                    labelOffset = new Size(-width / 2 + 18, -height - 45);
+                    labelOffset = new Size(-width / 2 + 18, -height - 43);
                     label = new Label(labelContent, { offset : labelOffset, position : center});
 
                     if (options.style) {
@@ -154,27 +210,19 @@ define(function(require, exports, module) {
                 }
 
                 this.label = label;
-            },
-
-            show : function(offset, zoom, silent) {
-                var map = this.map,
-                    lng = this.lng,
-                    lat = this.lat + offset;
-
-                silent = silent || !this.speed;
-
-                // 如果传入silent参数
-                // 则为初始化地图位置
-                // 使用map的centerAndZoom接口
-                if (silent) {
-                    map.centerAndZoom(new Point(lng, lat), zoom);
-                } else {
-                    map.panTo(new Point(lng, lat));
-                }
             }
         }),
 
-        MapView = Panel.extend({
+
+        /*
+            理解ZMap有点困难
+            这是由于ZSite对象，是要控制另个label的
+            一个是放在map中，一个是放在asset中
+            map中的label是实际显示的
+            asset中的label只是用于模拟出map中label的宽高，以方便参数的设置
+        */
+
+        ZMap = ZPanel.extend({
             template : [
 
                 '<div class="z_map_view"></div>',
@@ -183,21 +231,17 @@ define(function(require, exports, module) {
             ].join(''),
 
             initialize : function(options) {
-                options = _.defaults(options, defaults);
+                _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
-                Panel.prototype.initialize.call(this, options);
+                ZPanel.prototype.initialize.call(this, options);
             },
 
-            render : function() {
+            reset : function() {
                 var $elem = this.$el,
                     $items = $elem.children(),
 
                     $view,
                     $asset,
-
-                    options = this.options,
-                    hasNav = options.nav,
-                    hasOrv = options.overview,
                     
                     map;
 
@@ -215,145 +259,165 @@ define(function(require, exports, module) {
                 this.$view = $view;
                 this.$asset = $asset;
 
-                map = new Map($view[0]);
+                map = new Map($view.get(0));
                 map.enableScrollWheelZoom();
 
-                if (hasNav) {
-                    map.addControl(new NavigationControl());
-                    map.addControl(new MapTypeControl());
+                this.map = map;
+
+                return this;
+            },
+
+            render : function() {
+                var collection = this.collection,
+
+                    tmpl = this.tmpl,
+                    map = this.map,
+                    lat = this.lat,
+                    lng = this.lng,
+                    icon = this.icon,
+                    label = this.label,
+                    speed = this.speed,
+                    init = this.init;
+
+                collection.each(function(model) {
+                    var item = new ZSite({
+                            zid   : model.id || model.cid,
+                            speed : speed,
+
+                            map   : map,
+                            lat   : model.get('lat') || lat,
+                            lng   : model.get('lng') || lng,
+
+                            data  : model.toJSON(),
+                            tmpl  : tmpl
+                        });
+
+                    this.append(item.render().el);
+                    this.addItem(item);
+                }, this);
+
+                this.cache();
+                this.start(init);
+
+                return this;
+            },
+
+            build : function() {
+                var $items = this.$items,
+
+                    map = this.map,
+                    lat = this.lat,
+                    lng = this.lng,
+                    icon = this.icon,
+                    label = this.label,
+                    speed = this.speed,
+                    init = this.init;
+
+                _.each($items, function(elem) {
+                    var $elem = $(elem),
+
+                        item = new ZSite({
+                            zid   : elem.id || void 0,
+                            speed : speed,
+
+                            map   : map,
+                            lat   : $elem.data('lat') || lat,
+                            lng   : $elem.data('lng') || lng
+                        });
+
+                    this.append(item.stack(elem).build().el);
+                    this.addItem(item);
+                }, this);
+
+
+                // 如果没有任何配置元素
+                // 则尝试使用全局配置参数
+
+                if (!this.size()) {
+                    var item = new ZSite({
+                            speed : speed,
+                            map   : map,
+                            lat   : lat,
+                            lng   : lng
+                        });
+
+                    this.append(item.build().el);
+                    this.addItem(item);
                 }
 
-                if (hasOrv) {
-                    map.addControl(new OverviewMapControl({
+                this.cache();
+                this.start(init);
+
+                return this;
+            },
+
+            start : function(init) {
+                this.eachItem(function(item) {
+                    item.initMarker(this.icon);
+
+                    if (item.$el.html() !== ''){
+                        item.initLabel(this.label);
+                    }
+                });
+
+                if (this.nav) {
+                    this.map.addControl(new NavigationControl());
+                    this.map.addControl(new MapTypeControl());
+                }
+
+                if (this.overview) {
+                    this.map.addControl(new OverviewMapControl({
                         anchor : BMAP_ANCHOR_BOTTOM_RIGHT,
                         isOpen : true
                     }));
                 }
 
-                this.map = map;
+                // this.clear();
+                this.show(init);
             },
 
-            reset : function() {
-                var $items = this.$items,
-                    $asset = this.$asset,
 
-                    map = this.map,
+            // 采用了overflow为hidden的模式
+            // 代替display-none模式
 
-                    options = this.options,
-                    speed = options.speed,
-                    current = options.current,
-                    lat = options.lat,
-                    lng = options.lng,
-                    icon = options.icon,
-                    label = options.label,
-                    remote = options.remote,
-                    template = options.template;
-
-                if (remote && template && _.isFunction(template)) {
-                    if (_.isArray(remote)) {
-                        _.each(remote, function(data) {
-                            var itemId = data.id || void 0,
-                                item;
-
-                            this.addItem(item = new MapSite({
-                                itemId : itemId,
-                                speed : speed,
-                                map : map,
-                                lat : data.lat || lat,
-                                lng : data.lng || lng
-                            }));
-
-                            item.$el.html(template(data));
-                            item.initMarker(icon);
-                            item.initLabel(label);
-                        }, this);
-                    } else {
-                        remote.each(function(model) {
-                            var itemId = model.id || model.cid,
-                                item;
-
-                            this.addItem(item = new MapSite({
-                                itemId : itemId,
-                                speed : speed,
-                                map : map,
-                                lat : model.get('lat') || lat,
-                                lng : model.get('lng') || lng
-                            }));
-
-                            item.$el.html(template(model.toJSON()));
-                            item.initMarker(icon);
-                            item.initLabel(label);
-                        }, this);
-                    }
-                } else {
-                    _.each($items, function(elem) {
-                        var $elem = $(elem),
-
-                            itemId = elem.id || void 0,
-                            item;
-
-                        this.addItem(item = new MapSite({
-                            itemId : itemId,
-                            speed : speed,
-                            map : map,
-                            lat : $elem.data('lat') || lat,
-                            lng : $elem.data('lng') || lng
-                        }));
-
-                        item.$el.html(elem);
-                        item.initMarker(icon);
-                        item.initLabel(label);
-                    }, this);
-                }
-
-                if (!this.size()) {
-                    this.addItem(item = new MapSite({
-                        speed : speed,
-                        map : map,
-                        lat : lat,
-                        lng : lng
-                    }));
-
-                    item.initMarker(icon);
-                }
-
-                $asset.hide();
-
-                this.cache();
-                this.show(current);
-            },
+            // clear : function() {
+            //     this.$asset.hide();
+            // },
 
             show : function(index) {
-                var items = this.items,
-                    curIndex = this.curIndex,
+                var $elem = this.$el,
+
+                    items = this.items,
+                    curIndex = this.curIndex
+                    visible = this.visible,
 
                     map = this.map,
+                    zoom = this.zoom,
+                    offset = this.offset;
 
-                    options = this.options,
-                    zoom = options.zoom,
-                    offset = options.offset;
+                if (!visible) {
+                    $elem.show();
+                }
 
-                if (!this.visible) {
-                    this.$el.show();
-                    this.visible = true;
+                if (index != void 0) {
+                    index = this.validIndex(index);
 
-                    if (curIndex != -1) {
-                        items[curIndex].show(true);
+                    if (curIndex != index || !items[index].match(offset)) {
+                        items[index].show(offset, zoom, curIndex == -1);
+                    }
+                        
+                    if (curIndex != index) {
+                        this.updateIndex(index);
                     }
                 }
 
-                if (index == void 0) return;
+                this.visible = true;
 
-                index = this.validIndex(index);
-                if (curIndex == index) return;
-
-                items[index].show(offset, zoom, curIndex == -1);
-
-                this.updateIndex(index);
+                return this;
             }
         });
 
 
-    module.exports = MapView;
+    module.exports = ZMap;
 
 });

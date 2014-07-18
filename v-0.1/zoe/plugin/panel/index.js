@@ -7,39 +7,60 @@ define(function(require, exports, module) {
     var $ = require('jquery'),
         _ = require('underscore'),
 
-        View = require('backbone').View;
+        ZView = require('plugin/view/index');
 
 
     var defaults = {
-            'speed'   : 200,
-            'current' : 0
+            'speed' : 200,
+            'init'  : 0
         };
 
 
-    var PanelItem = View.extend({
-            className : 'z_panel_item',
+    var ZBlock = ZView.extend({
+            terminal : true,
 
             initialize : function(options) {
-                this.itemId = options.itemId;
-                this.speed = options.speed;
+                _.extend(this, _.pick(options, ['speed']));
+
+                ZView.prototype.initialize.call(this, options);
             },
 
-            show : function(silent) {
-                silent = silent || !this.speed;
+            reset : function() {
+                var $elem = this.$el,
+                    $items = $elem.children();
 
-                if (silent) {
-                    this.$el.show();
-                } else {
-                    this.$el.fadeIn(this.speed);
+                $items.detach();
+
+                $elem.html(this.template({}));
+                $elem.addClass('z_panel_block');
+
+                this.$items = $items;
+                this.$inner = $elem;
+
+                return this;
+            },
+
+            show : function(slient) {
+                var $elem = this.$el,
+
+                    visible = this.visible,
+                    speed = !slient && this.speed;
+
+                if (!visible) {
+                    if (!speed) {
+                        this.$el.show();
+                    } else {
+                        this.$el.fadeIn(speed);
+                    }
                 }
-            },
 
-            hide : function() {
-                this.$el.hide();
+                this.visible = true;
+
+                return this;
             }
         }),
 
-        Panel = View.extend({
+        ZPanel = ZView.extend({
             template : [
 
                 '<div class="z_panel_view"></div>',
@@ -47,116 +68,94 @@ define(function(require, exports, module) {
             ].join(''),
             
             initialize : function(options) {
-                this.options = _.defaults(options, defaults);
+                _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
-                this.visible = true;
-                this.items = [];
-                this.controls = [];
-
-                this.render();
-
-                // 重组整个控件的dom结构
-                if (this.options.remote && !_.isArray(this.options.remote)) {
-                    this.listenTo(this.options.remote, 'reset', this.reset);
-                } else {
-                    this.reset();
-                }
+                ZView.prototype.initialize.call(this, options);
             },
 
-            render : function() {
+            reset : function() {
                 var $elem = this.$el,
                     $items = $elem.children(),
                     
                     $view;
 
-                // 从dom中取出原有内容
                 $items.detach();
 
-                // 重新写入dom结构
                 $elem.html(this.template);
                 $elem.addClass('z_panel');
 
-                // 提取dom结构
                 $view = this.$('.z_panel_view');
 
                 this.$items = $items;
                 this.$inner = $view;
 
                 this.$view = $view;
+
+                return this;
             },
 
-            reset : function() {
-                var $items = this.$items,
+            render : function() {
+                var collection = this.collection,
 
-                    items = this.items,
+                    tmpl = this.tmpl,
+                    speed = this.speed,
+                    init = this.init;
 
-                    options = this.options,
-                    speed = options.speed,
-                    current = options.current,
-                    remote = options.remote,
-                    template = options.template;
+                collection.each(function(model) {
+                    var item = new ZBlock({
+                            zid   : model.id || model.cid,
+                            speed : speed,
 
-                if (remote && template && _.isFunction(template)) {
-                    // 如果数据来源外部
-                    // 则需要根据模板重新渲染
-                    if (_.isArray(remove)) {
-                        _.each(remote, function(data) {
-                            var itemId = data.id || void 0,
-                                item;
+                            data  : model.toJSON(),
+                            tmpl  : tmpl
+                        });
 
-                            this.addItem(item = new SliderItem({
-                                itemId : itemId,
-                                speed : speed
-                            }));
-
-                            item.$el.html(template(data));
-                        })
-                    } else {
-                        remote.each(function(model) {
-                            var itemId = model.id || model.cid,
-                                item;
-
-                            this.addItem(item = new SliderItem({
-                                itemId : itemId,
-                                speed : speed
-                            }));
-
-                            item.$el.html(template(model.toJSON()));
-                        }, this);
-                    }
-                } else {
-                    _.each($items, function(elem) {
-                        var itemId = elem.id || void 0,
-                            item;
-
-                        this.addItem(item = new PanelItem({
-                            itemId : itemId,
-                            speed : speed
-                        }));
-
-                        item.$el.html(elem);
-                    }, this);
-                }
+                    this.append(item.render().el);
+                    this.addItem(item);
+                }, this);
 
                 this.cache();
-                this.show(current);
+                this.show(init);
+
+                return this;
+            },
+
+            build : function() {
+                var $items = this.$items,
+
+                    speed = this.speed,
+                    init = this.init;
+
+                _.each($items, function(elem) {
+                    var item = new ZBlock({
+                            zid   : elem.id || void 0,
+                            speed : speed
+                        });
+
+                    this.append(item.stack(elem).build().el)
+                    this.addItem(item);
+                }, this);
+
+                this.cache();
+                this.show(init);
+
+                return this;
             },
 
             cache : function() {
-                var items = this.items,
-                    cache = {};
+                var cache = {};
 
-                _.each(items, function(item, index) {
-                    var itemId = item.itemId;
+                this.eachItem(function(item, index) {
+                    var id = item.zid;
 
-                    if (itemId != void 0) {
-                        cache[itemId] = index;
+                    if (id != void 0) {
+                        cache[id] = index;
                     }
                 });
 
                 this.id2Index = cache;
                 this.minIndex = 0;
-                this.maxIndex = items.length - 1;
+                this.maxIndex = this.size() - 1;
                 this.curIndex = -1;
             },
 
@@ -191,78 +190,61 @@ define(function(require, exports, module) {
             },
 
             show : function(index) {
-                var items = this.items,
-                    curIndex = this.curIndex;
+                var $elem = this.$el,
 
-                if (!this.visible) {
-                    this.$el.show();
-                    this.visible = true;
+                    items = this.items,
+                    curIndex = this.curIndex,
+                    
+                    visible = this.visible;
 
-                    if (curIndex != -1) {
-                        items[curIndex].show(true);
+                if (!visible) {
+                    $elem.show();
+                }
+
+
+                // 根据给出的index进行显示
+
+                if (index != void 0) {
+                    index = this.validIndex(index);
+                    
+                    if (curIndex != index) {
+                        // curIndex == -1
+                        // 说明控件仍未初始化
+
+                        if (curIndex == -1) {
+                            _.invoke(items, 'hide');
+                            items[index].show(true);
+                        } else {
+                            items[curIndex].hide();
+                            items[index].show();
+                        }
+
+                        this.updateIndex(index);
                     }
                 }
 
-                if (index == void 0) return;
+                this.visible = true;
 
-                index = this.validIndex(index);
-                if (curIndex == index) return;
-                
-                if (curIndex == -1) {
-                    // curIndex == -1
-                    // 说明控件仍未初始化
-                    _.invoke(items, 'hide');
-                    items[index].show(true);
-                } else {
-                    items[curIndex].hide();
-                    items[index].show();
-                }
-
-                this.updateIndex(index);
-            },
-
-            hide : function() {
-                var items = this.items,
-                    curIndex = this.curIndex;
-
-                if (this.visible) {
-                    this.$el.hide();
-                    this.visible = false;
-
-                    if (curIndex != -1) {
-                        items[curIndex].hide();
-                    } else {
-                        _.invoke(items, 'hide');
-                    }
-                }
+                return this;
             },
 
             size : function() {
-                return this.items.length;
+                return this.items ? this.items.length : 0;
             },
 
-            addItem : function(item) {
-                var $elem = this.$inner || this.$el,
-                    items = this.items;
-
-                $elem.append(item.$el);
-                items.push(item);
+            current : function() {
+                return this.curIndex;
             },
 
-            addControl : function(control, append) {
-                var $elem =  this.$el,
-                    controls = this.controls;
+            addControl : function(control) {
+                var controls = this.controls || (this.controls = []);
 
-                if (append) {
-                    $elem.append(control.$el);
-                }
                 controls.push(control);
-
-                this.listenTo(control, 'update', this.show);
+                this.binding(control);
             }
         });
 
 
-    module.exports = Panel;
+    module.exports = ZPanel;
 
 });

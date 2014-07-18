@@ -23,6 +23,11 @@
             font-size: 14px;
         }
 
+        .map .map_site {
+            line-height: 20px;
+            text-align: center;
+        }
+
         .tab {
             width: 450px;
             background: #666;
@@ -49,14 +54,15 @@
 </head>
 <body>
     <div class="canvas">
-        <div class="tab" data-zoe="menu[current=site-1]" data-for="v1">
+        <div class="tab" data-zoe="menu[init=site-1, repeat=true]" data-for="v1">
             <a href="#site-1">广州长宁</a>
             <a href="#site-2">广州长凯</a>
         </div>
         <div class="map" data-zoe="map" data-id="v1">
-            <p id="site-1" data-lng="113.26842946866" data-lat="23.109992557766">广汽丰田长宁店   (400-818-9038)</p>
-            <p id="site-2" data-lng="113.26929507231" data-lat="23.203684955051">广州长凯丰田   (400-616-3998)</p>
+            <p id="site-1" class="map_site" data-lng="113.26842946866" data-lat="23.109992557766">广汽丰田长宁店   (400-818-9038)</p>
+            <p id="site-2" class="map_site" data-lng="113.26929507231" data-lat="23.203684955051">广州长凯丰田   (400-616-3998)</p>
         </div>
+        <div id="v2" class="map"></div>
     </div>
 <script type="text/javascript" src="zoe/sea.js"></script>
 <script type="text/javascript" src="zoe/sea-config.js"></script>

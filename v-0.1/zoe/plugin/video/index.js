@@ -5,25 +5,24 @@
 define(function(require, exports, module) {
 
     // 加载对应的css文件
+
     require('./style.css');
 
 
     var // 引入swfobject，已经过cmd封装
+
         swf = require('tool/swf'),
 
         $ = require('jquery'),
         _ = require('underscore'),
 
-        View = require('backbone').View,
-        
-        Panel = require('plugin/panel/index');
+        ZView = require('plugin/view/index'),
+        ZPanel = require('plugin/panel/index');
 
 
     var defaults = {
-            'vendor'  : 'letv',
-
-            'speed'   : 300,
-            'current' : 0
+            'vendor' : 'letv',
+            'video'  : 0
         },
 
         special = {
@@ -34,8 +33,8 @@ define(function(require, exports, module) {
         };
 
 
-    var VideoTape = View.extend({
-            className : 'z_video_tape',
+    var ZTape = ZView.extend({
+            terminal : true,
 
             template : _.template([
 
@@ -44,23 +43,30 @@ define(function(require, exports, module) {
             ].join('')),
 
             initialize : function(options) {
-                this.itemId = options.itemId;
-                this.speed = options.speed;
-                this.video = options.video;
-                this.vendor = options.vendor;
+                _.extend(this, _.pick(options, ['speed', 'video', 'vendor']));
 
-                this.parse();
-                this.render();
+                this.parseVendor();
+                this.parseVideo();
+
+                ZView.prototype.initialize.call(this, options);
             },
 
-            parse : function() {
-                var video = this.video,
-                    vendor = this.vendor;
+            parseVendor : function() {
+                var vendor = this.vendor;
+
 
                 // 获取视频网站播放器的设置
+
                 if (_.isString(vendor)) {
                     vendor = special[vendor] || special[defaults.vendor];
                 }
+
+                this.vendor = vendor;
+            },
+
+            parseVideo : function() {
+                var vendor = this.vendor,
+                    video = this.video;
 
                 if (_.isString(video) && video.match(vendor.rpath)) {
                     video = video.replace(vendor.rpath, function(all, video) {
@@ -69,18 +75,26 @@ define(function(require, exports, module) {
                 }
 
                 this.video = video;
-                this.vendor = vendor;
             },
 
-            render : function() {
+            reset : function() {
                 var $elem = this.$el,
+                    $items = $elem.children(),
 
                     video = this.video,
-                    place = VideoTape.ID_PREFIX + video;
+                    place = ZTape.ID_PREFIX + video;
+
+                $items.detach();
 
                 $elem.html(this.template({
                     place : place
                 }));
+                $elem.addClass('z_video_tape');
+
+                this.$items = $items;
+                this.$inner = $elem;
+
+                return this;
             },
 
             initPlayer : function() {
@@ -91,7 +105,7 @@ define(function(require, exports, module) {
 
                     vendor = this.vendor,
                     video = this.video,
-                    place = VideoTape.ID_PREFIX + video,
+                    place = ZTape.ID_PREFIX + video,
 
                     params = {
                         quality : 'high',
@@ -120,23 +134,28 @@ define(function(require, exports, module) {
             },
 
             show : function(silent) {
-                silent = silent || !this.speed;
+                var $elem = this.$el,
 
-                if (silent) {
-                    this.$el.show();
-                } else {
-                    this.$el.fadeIn(this.speed);
+                    visible = this.visible,
+                    speed = !silent && this.speed;
+
+                if (!visible) {
+                    if (!speed) {
+                        this.$el.show();
+                    } else {
+                        this.$el.fadeIn(speed);
+                    }
                 }
-            },
 
-            hide : function() {
-                this.$el.hide();
+                this.visible = true;
+
+                return this;
             }
         }, {
             ID_PREFIX : 'z_video_'
         }),
 
-        Video = Panel.extend({
+        ZVideo = ZPanel.extend({
             template : [
 
                 '<div class="z_video_view"></div>'
@@ -144,12 +163,12 @@ define(function(require, exports, module) {
             ].join(''),
 
             initialize : function(options) {
-                options = _.defaults(options, defaults);
+                _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
-                Panel.prototype.initialize.call(this, options);
+                ZPanel.prototype.initialize.call(this, options);
             },
 
-            render : function() {
+            reset : function() {
                 var $elem = this.$el,
                     $items = $elem.children(),
 
@@ -166,82 +185,86 @@ define(function(require, exports, module) {
                 this.$inner = $view;
 
                 this.$view = $view;
+
+                return this;
             },
 
-            reset : function() {
+            render : function() {
+                var collection = this.collection,
+
+                    vendor = this.vendor,
+                    video = this.video,
+                    speed = this.speed,
+                    init = this.init;
+
+                collection.each(function(model) {
+                    var item = new ZTape({
+                            zid    : model.id || model.cid,
+                            vendor : model.get('vendor') || vendor,
+                            video  : model.get('video') || video,
+                            speed  : speed
+                        });
+
+                    this.append(item.render().el);
+                    this.addItem(item);
+                }, this);
+
+                this.cache();
+                this.start(init);
+
+                return this;
+            },
+
+            build : function() {
                 var $items = this.$items,
 
-                    items = this.items,
+                    vendor = this.vendor,
+                    video = this.video,
+                    speed = this.speed,
+                    init = this.init;
 
-                    options = this.options,
-                    speed = options.speed,
-                    current = options.current,
-                    video = options.video,
-                    vendor = options.vendor,
-                    remote = options.remote,
-                    template = options.template;
+                _.each($items, function(elem) {
+                    var $elem = $(elem),
+                        $link = elem.nodeName.match(/a/i) ? $elem : $elem.find('a'),
 
-                if (remote && template && _.isFunction(template)) {
-                    if (_.isArray(remote)) {
-                        _.each(remote, function(data) {
-                            var itemId = data.id || void 0,
-                                item;
-                            
-                            this.addItem(item = new VideoTape({
-                                itemId : itemId,
-                                speed : speed,
-                                video : data.video || video,
-                                vendor : data.vendor || vendor
-                            }));
+                        item = new ZTape({
+                            zid    : elem.id || void 0,
+                            vendor : $elem.data('vendor') || vendor,
+                            video  : $elem.data('video') || $link.attr('href') || video,
+                            speed  : speed
+                        });
 
-                            item.initPlayer();
-                        }, this);
-                    } else {
-                        remote.each(function(model) {
-                            var itemId = model.get('id') || void 0,
-                                item;
-                            
-                            this.addItem(item = new VideoTape({
-                                itemId : itemId,
-                                speed : speed,
-                                video : model.get('video') || video,
-                                vendor : model.get('vendor') || vendor
-                            }));
+                    this.append(item.build().el);
+                    this.addItem(item);
+                }, this);
+                
 
-                            item.initPlayer();
-                        }, this);
-                    }
-                } else {
-                    _.each($items, function(elem) {
-                        var $elem = $(elem),
-                            $link = elem.nodeName.match(/a/i) ? $elem : $elem.find('a'),
-                            
-                            itemId = elem.id || void 0,
-                            item;
-
-                        this.addItem(item = new VideoTape({
-                            itemId : itemId,
-                            speed : speed,
-                            video : $elem.data('video') || $link.attr('href') || video,
-                            vendor : $elem.data('vendor') || vendor
-                        }));
-
-                        item.initPlayer();
-                    }, this);
-                }
+                // 如果没有任何配置元素
+                // 则尝试使用全局配置参数
 
                 if (!this.size()) {
-                    this.addItem(item = new VideoTape({
-                        speed : speed,
-                        vendor : vendor,
-                        video : video
-                    }));
+                    var item = new ZTape({
+                            vendor : vendor,
+                            video  : video,
+                            speed  : speed
+                        });
 
-                    item.initPlayer();
+                    this.append(item.build().el);
+                    this.addItem(item);
                 }
 
                 this.cache();
-                this.show(current);
+                this.start(init);
+
+                return this;
+            },
+
+            start : function(init) {
+                this.eachItem(function(item) {
+                    item.initPlayer();
+                });
+
+                this.show(init);
             }
         }, {
             register : function(vendor, options) {
@@ -251,7 +274,7 @@ define(function(require, exports, module) {
         });
 
 
-    Video.register('bita', {
+    ZVideo.register('bita', {
         player : 'http://img4.bitautoimg.com/video/js/flvPlayer-end.swf',
         vars : function(id) {
             return {
@@ -260,7 +283,7 @@ define(function(require, exports, module) {
         }
     });
 
-    Video.register('letv', {
+    ZVideo.register('letv', {
         player : 'http://img1.bitautoimg.com/video/player/letv_yiche140611.swf',
         vars : function(id) {
             return {
@@ -270,7 +293,7 @@ define(function(require, exports, module) {
         }
     });
 
-    Video.register('youku', {
+    ZVideo.register('youku', {
         player : function(id) {
             return 'http://player.youku.com/player.php/sid/{id}/v.swf'.replace(/\{id\}/gi, id);
         },
@@ -281,7 +304,7 @@ define(function(require, exports, module) {
         rpath : /^http:\/\/\S+\/id_([^\/]+).html$/gi
     });
 
-    Video.register('tudou', {
+    ZVideo.register('tudou', {
         player : function(id) {
             return 'http://www.tudou.com/v/{id}/&icode={id}/v.swf'.replace(/\{id\}/gi, id);
         },
@@ -293,6 +316,6 @@ define(function(require, exports, module) {
     });
         
 
-    module.exports = Video;
+    module.exports = ZVideo;
 
 });
