@@ -444,11 +444,11 @@ define(function(require, exports, module) {
             },
 
             active : function(toggle) {
-                this.fxPlay && (this.fxPlay.locked = !!toggle);
+                this.fxPlay && (this.fxPlay.locked = !toggle);
 
                 if (this.fxActive) {
                     clearTimeout(this.fxActive.timeId);
-                    this.$el.toggleClass('inactive', !toggle);
+                    this.$el.toggleClass('inactive', !!toggle);
                 }
             },
 
@@ -460,12 +460,12 @@ define(function(require, exports, module) {
 
             hoverIn : function(event) {
                 event && event.preventDefault();
-                this.active(true);
+                this.active(false);
             },
 
             hoverOut : function(event) {
                 event && event.preventDefault();
-                this.active(false);
+                this.active(true);
             }
         }, {
             TYPE_PREV : 1,

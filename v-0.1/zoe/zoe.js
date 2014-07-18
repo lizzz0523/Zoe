@@ -7,7 +7,17 @@ var utils = require('tool/utils'),
     _ = require('underscore');
 
 
-var ready = 0,
+var inited,
+
+    ready = 0,
+    readyCheck = function() {
+        if (!inited || ready != 0) return;
+
+        _.defer(function() {
+            zoe.emit('bind');
+            zoe.emit('ready');
+        });
+    },
 
     rparam = /^[^\[]*\[([^\]]+)\]/,
     rdata = /^([^\[]+)(\[[^\]]*\])?$/,
@@ -100,6 +110,8 @@ _.each('on one off emit'.split(' '), function(method) {
 });
 
 
+inited = false;
+
 $('[data-zoe]').each(function(index, elem) {
     var $elem = $(elem),
         
@@ -136,20 +148,15 @@ $('[data-zoe]').each(function(index, elem) {
                     });
                 }
 
-                if (--ready == 0) {
-                    zoe.emit('bind');
-                    zoe.emit('ready');
-                }
+                ready--;
+                readyCheck();
             });
         }
     }
 });
 
-if (ready == 0) {
-    _.defer(function() {
-        zoe.emit('ready');
-    });
-}
+inited = true;
+readyCheck();
 
 
 module.exports = zoe;
