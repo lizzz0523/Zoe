@@ -39,43 +39,36 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $data = $elem.children();
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template({}));
                 $elem.addClass('z_menu');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
             },
 
             render : function() {
-                var collection = this.collection,
+                var $data = this.$data,
 
+                    data = this.data,
                     tmpl = this.tmpl,
-                    init = this.init;
-
-                this.collection.each(function(model) {
-                    this.append(tmpl(model.toJSON()));
-                }, this);
-
-                this.cache()
-                this.active(init);
-
-                return this;
-            },
-
-            build : function() {
-                var $items = this.$items,
 
                     init = this.init;
 
-                _.each($items, function(elem) {
-                    this.append(elem);
-                }, this);
+                if (data && tmpl && _.isFunction(tmpl)) {
+                    this.data.each(function(model) {
+                        this.append(tmpl(model.toJSON()));
+                    }, this);
+                } else {
+                    _.each($data, function(elem) {
+                        this.append(elem);
+                    }, this);
+                }
 
                 this.cache()
                 this.active(init);

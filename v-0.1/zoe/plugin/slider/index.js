@@ -41,14 +41,14 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $data = $elem.children();
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template({}));
                 $elem.addClass('z_slider_block');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
@@ -86,20 +86,17 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children(),
+                    $data = $elem.children(),
                     
                     $view,
                     $slider,
 
                     vertical = this.vertical;
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template);
                 $elem.addClass('z_slider');
-
-                $view = this.$('.z_slider_view');
-                $slider = this.$('.z_slider_wraper');
 
                 if (vertical) {
                     $elem.addClass('z_slider-v');
@@ -107,7 +104,10 @@ define(function(require, exports, module) {
                     $elem.addClass('z_slider-h');
                 }
 
-                this.$items = $items;
+                $view = this.$('.z_slider_view');
+                $slider = this.$('.z_slider_wraper');
+
+                this.$data = $data;
                 this.$inner = $slider;
 
                 this.$view = $view;
@@ -117,42 +117,35 @@ define(function(require, exports, module) {
             },
 
             render : function() {
-                var collection = this.collection,
+                var $data = this.$data,
 
+                    data = this.data,
                     tmpl = this.tmpl,
-                    init = this.init;
-
-                collection.each(function(model) {
-                    var item = new ZBlock({
-                            zid   : model.id || model.cid,
-
-                            data  : model.toJSON(),
-                            tmpl  : tmpl
-                        });
-
-                    this.append(item.render().el);
-                    this.addItem(item);
-                }, this);
-
-                this.cache();
-                this.start(init);
-
-                return this;
-            },
-
-            build : function() {
-                var $items = this.$items,
 
                     init = this.init;
 
-                _.each($items, function(elem) {
-                    var item = new ZBlock({
-                            zid   : elem.id || void 0
-                        });
+                if (data && tmpl && _.isFunction(tmpl)) {
+                    data.each(function(model) {
+                        var item = new ZBlock({
+                                zid  : model.id || model.cid,
 
-                    this.append(item.stack(elem).build().el);
-                    this.addItem(item);
-                }, this);
+                                data : model.toJSON(),
+                                tmpl : tmpl
+                            });
+
+                        this.append(item.render().el);
+                        this.addItem(item);
+                    }, this);
+                } else {
+                    _.each($data, function(elem) {
+                        var item = new ZBlock({
+                                zid : elem.id || void 0
+                            });
+
+                        this.append(item.stack(elem).render().el);
+                        this.addItem(item);
+                    }, this);
+                }
 
                 this.cache();
                 this.start(init);
@@ -361,8 +354,8 @@ define(function(require, exports, module) {
             slideTo : function(index, next, callback) {
                 var $slider = this.$slider,
 
-                    curIndex = this.curIndex,
                     items = this.items,
+                    curIndex = this.curIndex,
                     type;
 
                 if (_.isBoolean(next) ? next : index > curIndex) {

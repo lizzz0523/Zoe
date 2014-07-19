@@ -1,4 +1,3 @@
-
 // 翻页组件
 // by lizzz (http://lizzz0523.github.io/)
 
@@ -40,44 +39,37 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $data = $elem.children();
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template({}));
                 $elem.addClass('z_page');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
             },
 
             render : function() {
-                var tmpl = this.tmpl,
+                var $data = this.$data,
+
+                    data = this.data,
+                    tmpl = this.tmpl,
+
                     i = -1,
-                    total = this.collection.length,
+                    len,
+
                     init = this.init;
 
-                while(++i < total) {
-                    this.append(tmpl({
-                        index : i
-                    }));
+                if (data && tmpl && _.isFunction(tmpl)) {
+                    len = data.length;
+                } else {
+                    len = this.total;
                 }
 
-                this.cache();
-                this.active(init);
-
-                return this;
-            },
-
-            build : function() {
-                var tmpl = this.tmpl,
-                    i = -1,
-                    total = this.total,
-                    init = this.init;
-
-                while(++i < total) {
+                while (++i < len) {
                     this.append(tmpl({
                         index : i
                     }));

@@ -38,7 +38,7 @@ define(function(require, exports, module) {
         'lat'      : 39.943146, // 纬度
         'lng'      : 116.337284, // 经度
         'zoom'     : 13, // 地图缩放级别
-        'offset'   : 0.02, // 中心点偏移量
+        'offset'   : 0.01, // 中心点偏移量
 
         'nav'      : false, // 是否添加导航控件
         'overview' : false, // 是否添加右下角缩略图
@@ -79,14 +79,14 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $data = $elem.children();
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template({}));
                 $elem.addClass('z_map_site');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
@@ -97,7 +97,7 @@ define(function(require, exports, module) {
                     lng = this.lng,
                     lat = this.lat + offset,
                     center = new Point(lng, lat),
-
+                    
                     speed = !silent && this.speed;
 
                 ZView.prototype.show.call(this);
@@ -238,14 +238,14 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children(),
+                    $data = $elem.children(),
 
                     $view,
                     $asset,
                     
                     map;
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template);
                 $elem.addClass('z_map');
@@ -253,7 +253,7 @@ define(function(require, exports, module) {
                 $view = this.$('.z_map_view');
                 $asset = this.$('.z_map_asset');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $asset;
 
                 this.$view = $view;
@@ -268,42 +268,10 @@ define(function(require, exports, module) {
             },
 
             render : function() {
-                var collection = this.collection,
+                var $data = this.$data,
 
+                    data = this.data,
                     tmpl = this.tmpl,
-                    map = this.map,
-                    lat = this.lat,
-                    lng = this.lng,
-                    icon = this.icon,
-                    label = this.label,
-                    speed = this.speed,
-                    init = this.init;
-
-                collection.each(function(model) {
-                    var item = new ZSite({
-                            zid   : model.id || model.cid,
-                            speed : speed,
-
-                            map   : map,
-                            lat   : model.get('lat') || lat,
-                            lng   : model.get('lng') || lng,
-
-                            data  : model.toJSON(),
-                            tmpl  : tmpl
-                        });
-
-                    this.append(item.render().el);
-                    this.addItem(item);
-                }, this);
-
-                this.cache();
-                this.start(init);
-
-                return this;
-            },
-
-            build : function() {
-                var $items = this.$items,
 
                     map = this.map,
                     lat = this.lat,
@@ -313,36 +281,56 @@ define(function(require, exports, module) {
                     speed = this.speed,
                     init = this.init;
 
-                _.each($items, function(elem) {
-                    var $elem = $(elem),
+                if (data && tmpl && _.isFunction(tmpl)) {
+                    data.each(function(model) {
+                        var item = new ZSite({
+                                zid   : model.id || model.cid,
+                                speed : speed,
 
-                        item = new ZSite({
-                            zid   : elem.id || void 0,
-                            speed : speed,
+                                map   : map,
+                                lat   : model.get('lat') || lat,
+                                lng   : model.get('lng') || lng,
 
-                            map   : map,
-                            lat   : $elem.data('lat') || lat,
-                            lng   : $elem.data('lng') || lng
-                        });
+                                data  : model.toJSON(),
+                                tmpl  : tmpl
+                            });
 
-                    this.append(item.stack(elem).build().el);
-                    this.addItem(item);
-                }, this);
+                        this.append(item.render().el);
+                        this.addItem(item);
+                    }, this);
+                } else {
+                    _.each($data, function(elem) {
+                        var $elem = $(elem),
+
+                            item = new ZSite({
+                                zid   : elem.id || void 0,
+                                speed : speed,
+
+                                map   : map,
+                                lat   : $elem.data('lat') || lat,
+                                lng   : $elem.data('lng') || lng
+                            });
+
+                        this.append(item.stack(elem).render().el);
+                        this.addItem(item);
+                    }, this);
 
 
-                // 如果没有任何配置元素
-                // 则尝试使用全局配置参数
+                    // 如果没有任何配置元素
+                    // 则尝试使用全局配置参数
 
-                if (!this.size()) {
-                    var item = new ZSite({
-                            speed : speed,
-                            map   : map,
-                            lat   : lat,
-                            lng   : lng
-                        });
+                    if (!this.size()) {
+                        var item = new ZSite({
+                                speed : speed,
 
-                    this.append(item.build().el);
-                    this.addItem(item);
+                                map   : map,
+                                lat   : lat,
+                                lng   : lng
+                            });
+
+                        this.append(item.render().el);
+                        this.addItem(item);
+                    }
                 }
 
                 this.cache();
@@ -355,7 +343,7 @@ define(function(require, exports, module) {
                 this.eachItem(function(item) {
                     item.initMarker(this.icon);
 
-                    if (item.$el.html() !== ''){
+                    if (item.$el.html() !== '') {
                         item.initLabel(this.label);
                     }
                 });
@@ -387,13 +375,13 @@ define(function(require, exports, module) {
             show : function(index) {
                 var $elem = this.$el,
 
-                    items = this.items,
-                    curIndex = this.curIndex
-                    visible = this.visible,
-
                     map = this.map,
                     zoom = this.zoom,
-                    offset = this.offset;
+                    offset = this.offset,
+
+                    items = this.items,
+                    curIndex = this.curIndex
+                    visible = this.visible;
 
                 if (!visible) {
                     $elem.show();

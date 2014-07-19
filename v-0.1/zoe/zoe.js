@@ -8,8 +8,8 @@ var utils = require('tool/utils'),
 
 
 var inited,
-
     ready = 0,
+    
     readyCheck = function() {
         if (!inited || ready != 0) return;
 
@@ -19,10 +19,10 @@ var inited,
         });
     },
 
+    tpath = 'plugin/{s}/index.js',
+
     rparam = /^[^\[]*\[([^\]]+)\]/,
     rdata = /^([^\[]+)(\[[^\]]*\])?$/,
-
-    tpath = 'plugin/{s}/index.js',
 
     getData = function(str) {
         var data = String(str).match(rdata);
@@ -136,7 +136,7 @@ $('[data-zoe]').each(function(index, elem) {
             ready++;
             require.async(tpath.replace(/\{s\}/g, viewData.plugin), function(View) {
                 view = new View(options);
-                zoe.views[viewId] = view.build();
+                zoe.views[viewId] = view.render();
 
                 if (viewBind) {
                     zoe.one('bind', function() {

@@ -34,61 +34,60 @@ define(function(require, exports, module) {
 
                 if (options.data) {
                     if (options.data instanceof Data) {
-                        // 如果是，则直接赋值到this.collection
+                        // 如果是，则直接赋值到this.data
 
-                        this.collection = options.data;
+                        this.data = options.data;
                     } else {
-                        // 如果不是，则对data进行转换
+                        // 如果不是，则将data转换成Data对象
 
-                        this.collection = this.parse(options.data);
+                        this.data = this.parse(options.data);
                     }
                 }
 
+
                 // 重构节点的dom结构
+                
                 this.reset();
 
-                if (this.collection) {
+                if (this.data) {
                     // 如果节点包含未渲染的数据
                     // 则等待数据准备完成后，马上进行渲染操作
 
-                    this.listenTo(this.collection, 'reset', this.render);
+                    this.listenTo(this.data, 'reset', this.render);
                 } else {
                     // 如果节点不包含未渲染数据
                     // 则直接通过现有节点进行渲染
 
-                    // this.build();
+                    // this.render();
                 }
             },
 
             parse : function(data) {
-                return collection = new Data(_.isArray(data) ? data : [data]);
+                return new Data(_.isArray(data) ? data : [data]);
             },
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children();
+                    $data = $elem.children();
 
 
                 // 由于Zoe是接受html配置的
                 // 配置信息会保存在dom
                 // 因此，在重建时，要先分离出配置信息
 
-                $items.detach();
+                $data.detach();
 
 
                 // 重新写入dom结构
+                // 并加入组件对应的类名
 
                 $elem.html(this.template({}));
-
-
-                // 加入组件对应的类名
-
                 $elem.addClass('z_view');
 
 
-                // 缓存dom节点
+                // 缓存特殊dom节点
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
@@ -98,54 +97,49 @@ define(function(require, exports, module) {
             // ZView的渲染过程是一个递归的过程
             // 即ZView会把渲染的过程交给他的子节点（也是ZView节点）来负责
             // 直到，我们在某个字节点上设置terminal为true
-            // 这个渲染逻辑在render方法和build方法中均有体现
             
             render : function() {
-                var collection = this.collection,
+                var $data = this.$data,
 
-                    terminal = this.terminal,
+                    data = this.data,
                     tmpl = this.tmpl;
 
-                if (!terminal) {
-                    collection.each(function(model) {
-                        var item = new ZView({
-                                data : model.toJSON(),
-                                tmpl : tmpl
-                            });
-
-                        this.append(item.render().el);
-                        this.addItem(item);
-                    }, this);
-                } else {
-                    this.collection.each(function(model) {
-                        this.append(tmpl(model.toJSON()));
-                    }, this);
-                }
-
-                return this.show();
-            },
-
-            build : function() {
-                var $items = this.$items,
-
+                    external = data && tmpl && _.isFunction(tmpl),
                     terminal = this.terminal;
 
                 if (!terminal) {
-                    _.each($items, function(elem) {
-                        var item = new ZView();
+                    if (external) {
+                        data.each(function(model) {
+                            var item = new ZView({
+                                    data : model.toJSON(),
+                                    tmpl : tmpl
+                                });
 
-
+                            this.append(item.render().el);
+                            this.addItem(item);
+                        }, this);
+                    } else {
                         // ZView支持使用标签内元素进行配置
                         // 但需要先把元素stack到子节点的配置元素($items)里
                         // 然后递归执行子节点的build方法
 
-                        this.append(item.stack(elem).build().el);
-                        this.addItem(item);
-                    }, this);
+                        _.each($data, function(elem) {
+                            var item = new ZView();
+
+                            this.append(item.stack(elem).render().el);
+                            this.addItem(item);
+                        }, this);
+                    }
                 } else {
-                    _.each($items, function(elem) {
-                        this.append(elem);
-                    }, this);
+                    if (external) {
+                        this.data.each(function(model) {
+                            this.append(tmpl(model.toJSON()));
+                        }, this);
+                    } else {
+                        _.each($data, function(elem) {
+                            this.append(elem);
+                        }, this);
+                    }
                 }
 
                 return this.show();
@@ -167,11 +161,11 @@ define(function(require, exports, module) {
                 return this;
             },
 
-            append : function(child, out) {
+            append : function(child, outer) {
                 var $elem = this.$el,
                     $inner = this.$inner || $elem;
 
-                if (!out) {
+                if (!outer) {
                     $inner.append(child);
                 } else {
                     $elem.append(child);
@@ -180,11 +174,11 @@ define(function(require, exports, module) {
                 return this;
             },
 
-            prepend : function(child, out) {
+            prepend : function(child, outer) {
                 var $elem = this.$el,
                     $inner = this.$inner || $elem;
 
-                if (!out) {
+                if (!outer) {
                     $inner.prepend(child);
                 } else {
                     $elem.prepend(child);
@@ -196,10 +190,10 @@ define(function(require, exports, module) {
 
             // stack方法用于向节点压入配置元素
 
-            stack : function(child) {
-                var $items = this.$items;
+            stack : function(data) {
+                var $data = this.$data;
 
-                $items.push(child);
+                $data.push(data);
 
                 return this;
             },
@@ -246,8 +240,8 @@ define(function(require, exports, module) {
             // binding方法，主要是用于支持Zoe的View Binding功能
             // 各组件都可以按自己需求重载binding方法
             
-            binding : function(node) {
-                this.listenTo(node, 'update', this.show);
+            binding : function(view) {
+                this.listenTo(view, 'update', this.show);
             }
         });
 

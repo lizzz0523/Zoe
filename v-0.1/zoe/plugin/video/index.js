@@ -79,19 +79,19 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children(),
+                    $data = $elem.children(),
 
                     video = this.video,
                     place = ZTape.ID_PREFIX + video;
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template({
                     place : place
                 }));
                 $elem.addClass('z_video_tape');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
@@ -170,18 +170,18 @@ define(function(require, exports, module) {
 
             reset : function() {
                 var $elem = this.$el,
-                    $items = $elem.children(),
+                    $data = $elem.children(),
 
                     $view;
 
-                $items.detach();
+                $data.detach();
 
                 $elem.html(this.template);
                 $elem.addClass('z_video');
 
                 $view = this.$('.z_video_view');
 
-                this.$items = $items;
+                this.$data = $data;
                 this.$inner = $view;
 
                 this.$view = $view;
@@ -190,67 +190,64 @@ define(function(require, exports, module) {
             },
 
             render : function() {
-                var collection = this.collection,
+                var $data = this.$data,
+
+                    data = this.data,
+                    tmpl = this.tmpl,
 
                     vendor = this.vendor,
                     video = this.video,
                     speed = this.speed,
                     init = this.init;
 
-                collection.each(function(model) {
-                    var item = new ZTape({
-                            zid    : model.id || model.cid,
-                            vendor : model.get('vendor') || vendor,
-                            video  : model.get('video') || video,
-                            speed  : speed
-                        });
+                if (data && tmpl && _.isFunction(tmpl)) {
+                    data.each(function(model) {
+                        var item = new ZTape({
+                                zid    : model.id || model.cid,
+                                speed  : speed,
 
-                    this.append(item.render().el);
-                    this.addItem(item);
-                }, this);
+                                vendor : model.get('vendor') || vendor,
+                                video  : model.get('video') || video,
 
-                this.cache();
-                this.start(init);
+                                data   : model.toJSON(),
+                                tmpl   : tmpl
+                            });
 
-                return this;
-            },
+                        this.append(item.render().el);
+                        this.addItem(item);
+                    }, this);
+                } else {
+                    _.each($data, function(elem) {
+                        var $elem = $(elem),
+                            $link = elem.nodeName.match(/a/i) ? $elem : $elem.find('a'),
 
-            build : function() {
-                var $items = this.$items,
+                            item = new ZTape({
+                                zid    : elem.id || void 0,
+                                speed  : speed,
 
-                    vendor = this.vendor,
-                    video = this.video,
-                    speed = this.speed,
-                    init = this.init;
+                                vendor : $elem.data('vendor') || vendor,
+                                video  : $elem.data('video') || $link.attr('href') || video
+                            });
 
-                _.each($items, function(elem) {
-                    var $elem = $(elem),
-                        $link = elem.nodeName.match(/a/i) ? $elem : $elem.find('a'),
+                        this.append(item.stack(elem).render().el);
+                        this.addItem(item);
+                    }, this);
 
-                        item = new ZTape({
-                            zid    : elem.id || void 0,
-                            vendor : $elem.data('vendor') || vendor,
-                            video  : $elem.data('video') || $link.attr('href') || video,
-                            speed  : speed
-                        });
 
-                    this.append(item.build().el);
-                    this.addItem(item);
-                }, this);
-                
+                    // 如果没有任何配置元素
+                    // 则尝试使用全局配置参数
 
-                // 如果没有任何配置元素
-                // 则尝试使用全局配置参数
+                    if (!this.size()) {
+                        var item = new ZTape({
+                                speed  : speed,
 
-                if (!this.size()) {
-                    var item = new ZTape({
-                            vendor : vendor,
-                            video  : video,
-                            speed  : speed
-                        });
+                                vendor : vendor,
+                                video  : video
+                            });
 
-                    this.append(item.build().el);
-                    this.addItem(item);
+                        this.append(item.render().el);
+                        this.addItem(item);
+                    }
                 }
 
                 this.cache();
