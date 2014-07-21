@@ -5,7 +5,6 @@
 define(function(require, exports, module) {
 
     // 加载对应的css文件
-
     require('./style.css');
 
 
@@ -28,10 +27,8 @@ define(function(require, exports, module) {
             'hover'    : true,
             'loop'     : true,
             'vertical' : false,
-
             
             // 由于slider是空间上的变换，需要比panel更长的变换时间
-
             'speed'    : 500
         };
 
@@ -58,8 +55,8 @@ define(function(require, exports, module) {
         ZSlider = ZPanel.extend({
             template : [
 
-                '<div class="z_slider_view">',
-                    '<div class="z_slider_wraper"></div>',
+                '<div class="z_slider_mask">',
+                    '<div class="z_slider_view"></div>',
                 '</div>'
             
             ].join(''),
@@ -72,10 +69,8 @@ define(function(require, exports, module) {
             initialize : function(options) {
                 _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
-
                 // 这里的队列是用于处理效果的触发
                 // 以免出现漏帧
-
                 this.queue = queue(this);
                 
                 this.fxFade = false;
@@ -89,7 +84,7 @@ define(function(require, exports, module) {
                     $data = $elem.children(),
                     
                     $view,
-                    $slider,
+                    $mask,
 
                     vertical = this.vertical;
 
@@ -105,13 +100,13 @@ define(function(require, exports, module) {
                 }
 
                 $view = this.$('.z_slider_view');
-                $slider = this.$('.z_slider_wraper');
+                $mask = this.$('.z_slider_mask');
 
                 this.$data = $data;
-                this.$inner = $slider;
+                this.$inner = $view;
 
                 this.$view = $view;
-                this.$slider = $slider;
+                this.$mask = $mask;
 
                 return this;
             },
@@ -234,7 +229,7 @@ define(function(require, exports, module) {
 
                 if (this.nav && this.hover) {
                     this.fxActive = {
-                        timeId : setTimeout(_.bind(this.active, this, false), 2000)
+                        timeId : setTimeout(_.bind(this.active, this, true), 2000)
                     }
                 }
 
@@ -272,7 +267,6 @@ define(function(require, exports, module) {
 
                 if (index != void 0) {
                     // 判断传入的index是否next或者prev
-
                     next = String(index).match(/^next|prev$/)
                     ? index == 'next'
                     : void 0;
@@ -300,12 +294,9 @@ define(function(require, exports, module) {
 
                 queue.clear(qname);
 
-
                 // curIndex == -1
                 // 说明控件仍未初始化
-
                 if (curIndex == -1) {
-
                     queue.add(qname, function(){
                         _.defer(function(){
                             queue.next(qname);
@@ -325,7 +316,6 @@ define(function(require, exports, module) {
                         // 加一个160毫秒的delay
                         // 可以减缓响应速度
                         // 感觉更真实
-                        
                         _.delay(function(){
                             queue.next(qname);
                         }, 160);
@@ -352,9 +342,7 @@ define(function(require, exports, module) {
             },
 
             slideTo : function(index, next, callback) {
-                var $slider = this.$slider,
-
-                    items = this.items,
+                var items = this.items,
                     curIndex = this.curIndex,
                     type;
 
@@ -370,12 +358,12 @@ define(function(require, exports, module) {
 
                 if (_.isFunction(callback)) {
                     callback = _.wrap(callback, function(callback) {
-                        this.items[curIndex].hide();
+                        items[curIndex].hide();
                         callback.call(this);
                     });
                 } else {
                     callback = function() {
-                        this.items[curIndex].hide();
+                        items[curIndex].hide();
                     }
                 }
 
@@ -383,7 +371,7 @@ define(function(require, exports, module) {
             },
 
             slide : function(type, callback) {
-                var $slider = this.$slider,
+                var $slider = this.$view,
 
                     vertical = this.vertical,
 
@@ -416,12 +404,12 @@ define(function(require, exports, module) {
 
                 if (_.isFunction(callback)) {
                     callback = _.wrap(callback, function(callback) {
-                        this.$slider.css({left : 0, top : 0});
+                        $slider.css({left : 0, top : 0});
                         callback.call(this);
                     });
                 } else {
                     callback = function() {
-                        this.$slider.css({left : 0, top : 0});
+                        $slider.css({left : 0, top : 0});
                     }
                 }
 

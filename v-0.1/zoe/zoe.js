@@ -11,6 +11,8 @@ var inited,
     ready = 0,
     
     readyCheck = function() {
+        // 只有当zoe初始化的扫描执行完毕
+        // 并且，所有组件都初始化后，才会触发bind和ready事件
         if (!inited || ready != 0) return;
 
         _.defer(function() {
@@ -156,6 +158,7 @@ $('[data-zoe]').each(function(index, elem) {
 });
 
 inited = true;
+
 readyCheck();
 
 

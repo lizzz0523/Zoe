@@ -193,17 +193,14 @@ define(function(require, exports, module) {
                     $elem.show();
                 }
 
-
                 // 根据给出的index进行显示
-
                 if (index != void 0) {
                     index = this.validIndex(index);
                     
                     if (curIndex != index) {
-                        // curIndex == -1
-                        // 说明控件仍未初始化
-
                         if (curIndex == -1) {
+                            // curIndex == -1
+                            // 说明控件仍未初始化
                             _.invoke(items, 'hide');
                             items[index].show(true);
                         } else {
@@ -233,6 +230,8 @@ define(function(require, exports, module) {
 
                 controls.push(control);
                 this.binding(control);
+
+                return this;
             }
         });
 

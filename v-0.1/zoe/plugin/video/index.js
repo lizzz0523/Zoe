@@ -5,12 +5,10 @@
 define(function(require, exports, module) {
 
     // 加载对应的css文件
-
     require('./style.css');
 
 
     var // 引入swfobject，已经过cmd封装
-
         swf = require('tool/swf'),
 
         $ = require('jquery'),
@@ -54,9 +52,7 @@ define(function(require, exports, module) {
             parseVendor : function() {
                 var vendor = this.vendor;
 
-
                 // 获取视频网站播放器的设置
-
                 if (_.isString(vendor)) {
                     vendor = special[vendor] || special[defaults.vendor];
                 }
@@ -81,8 +77,9 @@ define(function(require, exports, module) {
                 var $elem = this.$el,
                     $data = $elem.children(),
 
+                    vendor = this.vendor,
                     video = this.video,
-                    place = ZTape.ID_PREFIX + video;
+                    place = [ZTape.ID_PREFIX, vendor.name, video].join('_');
 
                 $data.detach();
 
@@ -105,7 +102,7 @@ define(function(require, exports, module) {
 
                     vendor = this.vendor,
                     video = this.video,
-                    place = ZTape.ID_PREFIX + video,
+                    place = [ZTape.ID_PREFIX, vendor.name, video].join('_'),
 
                     params = {
                         quality : 'high',
@@ -152,7 +149,7 @@ define(function(require, exports, module) {
                 return this;
             }
         }, {
-            ID_PREFIX : 'z_video_'
+            ID_PREFIX : 'z_video'
         }),
 
         ZVideo = ZPanel.extend({
@@ -195,9 +192,9 @@ define(function(require, exports, module) {
                     data = this.data,
                     tmpl = this.tmpl,
 
+                    speed = this.speed,
                     vendor = this.vendor,
                     video = this.video,
-                    speed = this.speed,
                     init = this.init;
 
                 if (data && tmpl && _.isFunction(tmpl)) {
@@ -205,7 +202,6 @@ define(function(require, exports, module) {
                         var item = new ZTape({
                                 zid    : model.id || model.cid,
                                 speed  : speed,
-
                                 vendor : model.get('vendor') || vendor,
                                 video  : model.get('video') || video,
 
@@ -224,7 +220,6 @@ define(function(require, exports, module) {
                             item = new ZTape({
                                 zid    : elem.id || void 0,
                                 speed  : speed,
-
                                 vendor : $elem.data('vendor') || vendor,
                                 video  : $elem.data('video') || $link.attr('href') || video
                             });
@@ -233,14 +228,11 @@ define(function(require, exports, module) {
                         this.addItem(item);
                     }, this);
 
-
                     // 如果没有任何配置元素
                     // 则尝试使用全局配置参数
-
                     if (!this.size()) {
                         var item = new ZTape({
                                 speed  : speed,
-
                                 vendor : vendor,
                                 video  : video
                             });
@@ -272,8 +264,9 @@ define(function(require, exports, module) {
 
 
     ZVideo.register('bita', {
+        name   : 'bita',
         player : 'http://img4.bitautoimg.com/video/js/flvPlayer-end.swf',
-        vars : function(id) {
+        vars   : function(id) {
             return {
                 file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayVideoInfo?id=' + id
             }
@@ -281,8 +274,9 @@ define(function(require, exports, module) {
     });
 
     ZVideo.register('letv', {
+        name   : 'letv',
         player : 'http://img1.bitautoimg.com/video/player/letv_yiche140611.swf',
-        vars : function(id) {
+        vars   : function(id) {
             return {
                 file : 'http://v.bitauto.com/vbase/LocalPlayer/GetPlayInfo?videoid=' + id,
                 pver : 'website'
@@ -291,21 +285,23 @@ define(function(require, exports, module) {
     });
 
     ZVideo.register('youku', {
+        name   : 'youku',
         player : function(id) {
             return 'http://player.youku.com/player.php/sid/{id}/v.swf'.replace(/\{id\}/gi, id);
         },
-        vars : {
+        vars   : {
             isAutoPlay : false,
             noCookie : 0
         },
-        rpath : /^http:\/\/\S+\/id_([^\/]+).html$/gi
+        rpath  : /^http:\/\/\S+\/id_([^\/]+).html$/gi
     });
 
     ZVideo.register('tudou', {
+        name   : 'tudou',
         player : function(id) {
             return 'http://www.tudou.com/v/{id}/&icode={id}/v.swf'.replace(/\{id\}/gi, id);
         },
-        vars : {
+        vars   : {
             auto : 0,
             withAD : false,
             noCookie : 0

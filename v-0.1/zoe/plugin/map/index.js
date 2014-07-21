@@ -4,7 +4,6 @@
 define(function(require, exports, module) {
 
     // 加载对应的css文件
-    
     require('./style.css');
 
 
@@ -12,7 +11,6 @@ define(function(require, exports, module) {
         // 已经使用cmd封装，可是百度地图的api回调
         // 使用的是BMap这个全局变量，所以无法完全封装
         // 万恶的百度
-
         bmap = require('tool/bmap'),
 
         Map = bmap.Map,
@@ -54,7 +52,7 @@ define(function(require, exports, module) {
             ]
         }, // 自定义标点信息
         'label'    : {
-            style : {
+            style    : {
                 'border-color' : '#ccc'
             },
             template : _.template([
@@ -102,11 +100,9 @@ define(function(require, exports, module) {
 
                 ZView.prototype.show.call(this);
 
-
                 // 如果传入silent参数
                 // 则为初始化地图位置
                 // 使用map的centerAndZoom接口
-
                 if (!speed) {
                     map.centerAndZoom(center, zoom);
                 } else {
@@ -116,9 +112,7 @@ define(function(require, exports, module) {
                 return this;
             },
             
-
             // match方法是用于判断地图当前是否对准某个site
-
             match : function(offset) {
                 var map = this.map,
                     lng = this.lng,
@@ -128,10 +122,8 @@ define(function(require, exports, module) {
                 return center.lng === lng && center.lat === lat;
             },
 
-
             // 初始化标点
             // 具体操作查看百度地图api
-
             initMarker : function(options) {
                 var map = this.map,
                     lng = this.lng,
@@ -171,10 +163,8 @@ define(function(require, exports, module) {
                 this.marker = marker;
             },
 
-
             // 初始化浮层信息
             // 具体操作查看百度地图api
-
             initLabel : function(options) {
                 var $elem = this.$el,
                     
@@ -213,15 +203,11 @@ define(function(require, exports, module) {
             }
         }),
 
-
-        /*
-            理解ZMap有点困难
-            这是由于ZSite对象，是要控制另个label的
-            一个是放在map中，一个是放在asset中
-            map中的label是实际显示的
-            asset中的label只是用于模拟出map中label的宽高，以方便参数的设置
-        */
-
+        // 理解ZMap有点困难
+        // 这是由于ZSite对象，是要控制另个label的
+        // 一个是放在map中，一个是放在asset中
+        // map中的label是实际显示的
+        // asset中的label只是用于模拟出map中label的宽高，以方便参数的设置
         ZMap = ZPanel.extend({
             template : [
 
@@ -273,12 +259,10 @@ define(function(require, exports, module) {
                     data = this.data,
                     tmpl = this.tmpl,
 
+                    speed = this.speed,
                     map = this.map,
                     lat = this.lat,
                     lng = this.lng,
-                    icon = this.icon,
-                    label = this.label,
-                    speed = this.speed,
                     init = this.init;
 
                 if (data && tmpl && _.isFunction(tmpl)) {
@@ -286,7 +270,6 @@ define(function(require, exports, module) {
                         var item = new ZSite({
                                 zid   : model.id || model.cid,
                                 speed : speed,
-
                                 map   : map,
                                 lat   : model.get('lat') || lat,
                                 lng   : model.get('lng') || lng,
@@ -305,7 +288,6 @@ define(function(require, exports, module) {
                             item = new ZSite({
                                 zid   : elem.id || void 0,
                                 speed : speed,
-
                                 map   : map,
                                 lat   : $elem.data('lat') || lat,
                                 lng   : $elem.data('lng') || lng
@@ -315,14 +297,11 @@ define(function(require, exports, module) {
                         this.addItem(item);
                     }, this);
 
-
                     // 如果没有任何配置元素
                     // 则尝试使用全局配置参数
-
                     if (!this.size()) {
                         var item = new ZSite({
                                 speed : speed,
-
                                 map   : map,
                                 lat   : lat,
                                 lng   : lng
@@ -364,10 +343,8 @@ define(function(require, exports, module) {
                 this.show(init);
             },
 
-
             // 采用了overflow为hidden的模式
             // 代替display-none模式
-
             // clear : function() {
             //     this.$asset.hide();
             // },
@@ -380,7 +357,7 @@ define(function(require, exports, module) {
                     offset = this.offset,
 
                     items = this.items,
-                    curIndex = this.curIndex
+                    curIndex = this.curIndex,
                     visible = this.visible;
 
                 if (!visible) {

@@ -14,10 +14,8 @@ define(function(require, exports, module) {
 
 
     var ZView = View.extend({
-
             // terminal标志
             // 用于判断，数据的渲染，是由自身负责，还是交由子节点负责
-
             terminal : false,
 
             visible : true,
@@ -29,35 +27,27 @@ define(function(require, exports, module) {
             initialize : function(options) {
                 _.extend(this, _.pick(options, ['zid', 'terminal', 'visible', 'template', 'tmpl']));
 
-
                 // 当options包含data和属性
-
                 if (options.data) {
                     if (options.data instanceof Data) {
                         // 如果是，则直接赋值到this.data
-
                         this.data = options.data;
                     } else {
                         // 如果不是，则将data转换成Data对象
-
                         this.data = this.parse(options.data);
                     }
                 }
 
-
-                // 重构节点的dom结构
-                
+                // 重构节点的dom结构     
                 this.reset();
 
                 if (this.data) {
                     // 如果节点包含未渲染的数据
                     // 则等待数据准备完成后，马上进行渲染操作
-
                     this.listenTo(this.data, 'reset', this.render);
                 } else {
                     // 如果节点不包含未渲染数据
                     // 则直接通过现有节点进行渲染
-
                     // this.render();
                 }
             },
@@ -70,34 +60,26 @@ define(function(require, exports, module) {
                 var $elem = this.$el,
                     $data = $elem.children();
 
-
                 // 由于Zoe是接受html配置的
                 // 配置信息会保存在dom
                 // 因此，在重建时，要先分离出配置信息
-
                 $data.detach();
-
 
                 // 重新写入dom结构
                 // 并加入组件对应的类名
-
                 $elem.html(this.template({}));
                 $elem.addClass('z_view');
 
-
                 // 缓存特殊dom节点
-
                 this.$data = $data;
                 this.$inner = $elem;
 
                 return this;
             },
 
-
             // ZView的渲染过程是一个递归的过程
             // 即ZView会把渲染的过程交给他的子节点（也是ZView节点）来负责
             // 直到，我们在某个字节点上设置terminal为true
-            
             render : function() {
                 var $data = this.$data,
 
@@ -122,7 +104,6 @@ define(function(require, exports, module) {
                         // ZView支持使用标签内元素进行配置
                         // 但需要先把元素stack到子节点的配置元素($items)里
                         // 然后递归执行子节点的build方法
-
                         _.each($data, function(elem) {
                             var item = new ZView();
 
@@ -187,9 +168,7 @@ define(function(require, exports, module) {
                 return this;
             },
 
-
             // stack方法用于向节点压入配置元素
-
             stack : function(data) {
                 var $data = this.$data;
 
@@ -236,10 +215,8 @@ define(function(require, exports, module) {
                 return this;
             },
 
-
             // binding方法，主要是用于支持Zoe的View Binding功能
             // 各组件都可以按自己需求重载binding方法
-            
             binding : function(view) {
                 this.listenTo(view, 'update', this.show);
             }

@@ -2,14 +2,14 @@
     position: relative;
 }
 
-.z_slider .z_slider_view {
+.z_slider .z_slider_mask {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
 
-.z_slider .z_slider_wraper {
+.z_slider .z_slider_view {
     position: absolute;
 }
 
@@ -21,7 +21,7 @@
     height: 100%;
 }
 
-.z_slider-v .z_slider_wraper {
+.z_slider-v .z_slider_view {
     width: 100%;
     height: 200%;
 }
@@ -31,7 +31,7 @@
     height: 50%;
 }
 
-.z_slider-h .z_slider_wraper {
+.z_slider-h .z_slider_view {
     width: 200%;
     height: 100%;
 }
