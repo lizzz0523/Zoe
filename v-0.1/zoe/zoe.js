@@ -85,8 +85,12 @@ var inited,
     };
 
     
-function zoe(callback) {
-    zoe.on('ready', callback);
+function zoe(selector) {
+    if (typeof selector == 'string') {
+        return zoe.find(selector);
+    } else {
+        return zoe.on('ready', selector);
+    }
 }
 
 _.extend(zoe, {
