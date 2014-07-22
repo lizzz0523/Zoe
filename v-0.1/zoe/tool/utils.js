@@ -3,51 +3,13 @@ define(function(require, exports, module) {
 var _ = require('underscore');
 
 
-var _rencode = /[&<>"']/g,
-    _rdecode = /&(?:amp|lt|gt|quot|#39);/g,
-    _rescape = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-    _rtrim = /^\s+|\s+$/g,
-    _rcamelCase = /-([\da-z])/gi,
-    _rquery = /^[^?]*\?(.+)$/,
-    _rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-    _rjsonchars = /^[\],:{}\s]*$/,
-    _rjsonescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-    _rjsontokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
-    _rjsonbraces = /(?:^|:|,)(?:\s*\[)+/g,
-
-    _mencode = {
-        '<'  : '&lt;',
-        '>'  : '&gt;',
-        '&'  : '&amp;',
-        '"'  : '&quot;',
-        '\'' : '&#39;'
-    },
-
-    _mdecode = {
-        '&lt;'   : '<',
-        '&gt;'   : '>',
-        '&amp;'  : '&',
-        '&quot;' : '"',
-        '&#39;'  : '\''
-    },
-
-    _mescape = {
-        '\b' : '\\b',
-        '\t' : '\\t',
-        '\n' : '\\n',
-        '\f' : '\\f',
-        '\r' : '\\r',
-        '"'  : '\\"',
-        '\\' : '\\\\'
-    };
-
-var _slice = function(arr, start, end) {
+var slice = function(arr, start, end) {
         return end != void 0
         ? [].slice.call(arr, start, end)
         : [].slice.call(arr, start);
     },
 
-    _push = function(obj, key, value) {
+    push = function(obj, key, value) {
         // 如果push到某一key值的value不至一个
         // 那么我们应该把他push到一个数组当中
         
@@ -77,41 +39,82 @@ var utils = {
     }
 };
 
+
+var rtrim = /^\s+|\s+$/g,
+    rencode = /[&<>"']/g,
+    rdecode = /&(?:amp|lt|gt|quot|#39);/g,
+    rescape = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+    rcamelCase = /-([\da-z])/gi,
+
+    mencode = {
+        '<'  : '&lt;',
+        '>'  : '&gt;',
+        '&'  : '&amp;',
+        '"'  : '&quot;',
+        '\'' : '&#39;'
+    },
+
+    mdecode = {
+        '&lt;'   : '<',
+        '&gt;'   : '>',
+        '&amp;'  : '&',
+        '&quot;' : '"',
+        '&#39;'  : '\''
+    },
+
+    mescape = {
+        '\b' : '\\b',
+        '\t' : '\\t',
+        '\n' : '\\n',
+        '\f' : '\\f',
+        '\r' : '\\r',
+        '"'  : '\\"',
+        '\\' : '\\\\'
+    };
+
 _.extend(utils, {
     trim : function(str) {
         if(str == null) return '';
 
-        return String(str).replace(_rtrim, '');
+        return String(str).replace(rtrim, '');
     },
 
     encode : function(str) {
         if(str == null) return '';
 
-        return String(str).replace(_rencode, function(match) {
-            return _mencode[match];
+        return String(str).replace(rencode, function(match) {
+            return mencode[match];
         });
     },
 
     decode : function(str) {
         if (str == null) return '';
 
-        return String(str).replace(_rdecode, function(match) {
-            return _mdecode[match];
+        return String(str).replace(rdecode, function(match) {
+            return mdecode[match];
         });
     },
 
     escape : function(str) {
         if (str == null) return '';
 
-        return String(str).replace(_rescape, function(match) {
-            return _mescape[match] || '\\u' + ('0000' + match.charCodeAt(0).toString(16)).slice(-4);
+        return String(str).replace(rescape, function(match) {
+            return mescape[match] || '\\u' + ('0000' + match.charCodeAt(0).toString(16)).slice(-4);
         });
     }
 });
 
+
+var rquery = /^[^?]*\?(.+)$/,
+    rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+    rjsonchars = /^[\],:{}\s]*$/,
+    rjsonescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
+    rjsontokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+    rjsonbraces = /(?:^|:|,)(?:\s*\[)+/g;
+
 _.extend(utils, {
     parseQuery : function(str, separator) {
-        var query = String(str).match(_rquery),
+        var query = String(str).match(rquery),
             key,
             value;
 
@@ -135,7 +138,7 @@ _.extend(utils, {
                 value = value.replace('+', ' ');
             }
 
-            return _push(hash, key, value);
+            return push(hash, key, value);
         }, {});
     },
 
@@ -169,21 +172,23 @@ _.extend(utils, {
                 return JSON.parse(str);
             }
 
-            // 清洗字符串
-            str = _trim(String(str).replace(_rjsonclear, function(a) {
-                return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-            }));
+            if (str != null) {
+                // 清洗字符串
+                str = String(str).replace(rjsonclear, function(a) {
+                    return '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+                }).replace(rtrim, '');
 
-            if (_rjsonchars.test(str
-                .replace(_rjsonescape, '@')
-                .replace(_rjsontokens, ']')
-                .replace(_rjsonbraces, '')
-            )) {
-                res = (new Function('return ' + str))();
+                if (rjsonchars.test(str
+                    .replace(rjsonescape, '@')
+                    .replace(rjsontokens, ']')
+                    .replace(rjsonbraces, '')
+                )) {
+                    res = (new Function('return ' + str))();
 
-                return _.isFunction(reviver)
-                ? walk('', {'': res}, reviver)
-                : res;
+                    return _.isFunction(reviver)
+                    ? walk('', {'': res}, reviver)
+                    : res;
+                }
             }
 
             return [];

@@ -6,6 +6,78 @@ var utils = require('tool/utils'),
     $ = require('jquery'),
     _ = require('underscore');
 
+    
+function zoe(selector) {
+    if (typeof selector == 'string') {
+        return zoe.find(selector);
+    } else {
+        return zoe.on('ready', selector);
+    }
+}
+
+
+_.extend(zoe, {
+    version : 'zoe-0.0.1',
+
+    log : console && console.log
+    ? function() {
+        console.log.apply(console, arguments);
+    }
+    : function() {
+        // do nothing
+    }
+});
+
+
+_.extend(zoe, {
+    views : {},
+
+    zuid : 1,
+
+    find : function(viewId) {
+        if (zoe.views[viewId]) {
+            return zoe.views[viewId];
+        } else {
+            return null;
+        }
+    }
+});
+
+
+_.extend(zoe, {
+    event : event(zoe)
+});
+
+_.each('on one off emit'.split(' '), function(method) {
+    zoe[method] = function() {
+        zoe.event[method].apply(zoe.event, arguments);
+    };
+});
+
+
+_.extend(zoe, {
+    tpath : 'plugin/{s}/index.js',
+
+    use : function(plugins, callback) {
+        var args = [],
+            len;
+
+        plugins = _.isArray(plugins) ? plugins : [plugins];
+        len = plugins.length;
+        
+        _.each(plugins, function(plugin, index) {
+            require.async(zoe.tpath.replace(/\{s\}/g, plugin.toLowerCase()), function(View) {
+                args[index] = View;
+
+                len--;
+                if (len == 0) {
+                    callback.apply(zoe, args);
+                }
+            });
+        });
+    }
+});
+
 
 var inited,
     ready = 0,
@@ -20,8 +92,6 @@ var inited,
             zoe.emit('ready');
         });
     },
-
-    tpath = 'plugin/{s}/index.js',
 
     rparam = /^[^\[]*\[([^\]]+)\]/,
     rdata = /^([^\[]+)(\[[^\]]*\])?$/,
@@ -84,38 +154,6 @@ var inited,
         }, {});
     };
 
-    
-function zoe(selector) {
-    if (typeof selector == 'string') {
-        return zoe.find(selector);
-    } else {
-        return zoe.on('ready', selector);
-    }
-}
-
-_.extend(zoe, {
-    event : event(zoe),
-
-    views : {},
-
-    zuid : 1,
-
-    find : function(viewId) {
-        if (zoe.views[viewId]) {
-            return zoe.views[viewId];
-        } else {
-            return null;
-        }
-    }
-});
-
-_.each('on one off emit'.split(' '), function(method) {
-    zoe[method] = function() {
-        zoe.event[method].apply(zoe.event, arguments);
-    };
-});
-
-
 inited = false;
 
 $('[data-zoe]').each(function(index, elem) {
@@ -140,7 +178,7 @@ $('[data-zoe]').each(function(index, elem) {
             options.el = $elem[0];
 
             ready++;
-            require.async(tpath.replace(/\{s\}/g, viewData.plugin), function(View) {
+            zoe.use(viewData.plugin, function(View) {
                 view = new View(options);
                 zoe.views[viewId] = view.render();
 
@@ -149,7 +187,7 @@ $('[data-zoe]').each(function(index, elem) {
                         try {
                             zoe.find(viewBind).binding(view);
                         } catch(e) {
-                            // do nothing
+                            zoe.log('View Binding Error');
                         }
                     });
                 }
