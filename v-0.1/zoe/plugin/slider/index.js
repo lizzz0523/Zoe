@@ -148,41 +148,6 @@ define(function(require, exports, module) {
                 return this;
             },
 
-            validIndex : function(index) {
-                var loop = this.loop,
-
-                    minIndex = this.minIndex,
-                    maxIndex = this.maxIndex;
-
-                if (index === 'next') {
-                    index = this.curIndex + 1;
-                }
-
-                if (index === 'prev') {
-                    index = this.curIndex - 1;
-                }
-
-                if (_.isString(index)) {
-                    index = this.id2Index[index];
-                }
-
-                if (_.isFinite(index)) {
-                    index = +index;
-
-                    if (index > maxIndex) {
-                        index = loop ? minIndex : maxIndex;
-                    }
-
-                    if (index < minIndex) {
-                        index = loop ? maxIndex : minIndex;
-                    }
-                } else {
-                    index = minIndex;
-                }
-
-                return index;
-            },
-
             start : function(init) {
                 if (this.nav) {
                     this.nav = {
@@ -241,6 +206,41 @@ define(function(require, exports, module) {
                 }
 
                 this.show(init);
+            },
+
+            validIndex : function(index) {
+                var loop = this.loop,
+
+                    minIndex = this.minIndex,
+                    maxIndex = this.maxIndex;
+
+                if (index === 'next') {
+                    index = this.curIndex + 1;
+                }
+
+                if (index === 'prev') {
+                    index = this.curIndex - 1;
+                }
+
+                if (_.isString(index)) {
+                    index = this.id2Index[index];
+                }
+
+                if (_.isFinite(index)) {
+                    index = +index;
+
+                    if (index > maxIndex) {
+                        index = loop ? minIndex : maxIndex;
+                    }
+
+                    if (index < minIndex) {
+                        index = loop ? maxIndex : minIndex;
+                    }
+                } else {
+                    index = minIndex;
+                }
+
+                return index;
             },
 
             updateIndex : function(index) {
