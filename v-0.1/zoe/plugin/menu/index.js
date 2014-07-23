@@ -83,9 +83,10 @@ define(function(require, exports, module) {
                     cache = {};
 
                 _.each($tabs, function(tab) {
-                    var hash = tab.getAttribute('href', 2);
+                    var href = tab.getAttribute('href', 2),
+                        hash;
 
-                    if (hash = this.parseHash(hash)) {
+                    if (hash = this.getHash(href)) {
                         if (cache[hash]) {
                             cache[hash].push(tab);
                         } else {
@@ -119,19 +120,22 @@ define(function(require, exports, module) {
 
             clickTab : function(event) {
                 var target = event.currentTarget,
-                    hash = target.getAttribute('href', 2);
+                    href = target.getAttribute('href', 2),
+                    hash;
 
                 event && event.preventDefault();
 
-                if (hash = this.parseHash(hash)) {
+                if (hash = this.getHash(href)) {
                     this.active(hash);
                 }
             },
 
-            parseHash : function(hash) {
-                var pattern = this.pattern;
+            getHash : function(url) {
+                var pattern = this.pattern,
+                    hash = utils.parseURL(url, 'hash');
 
-                hash = utils.parseHash(hash);
+                hash = hash.split('#').pop();
+
                 if (pattern && (hash = hash.match(pattern))) {
                     hash = hash.pop();
                 }

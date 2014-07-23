@@ -106,11 +106,20 @@ _.extend(utils, {
 
 
 var rquery = /^[^?]*\?(.+)$/,
+    rurl = /^([\w\d\-]+:\/\/)?([^\/?#]+)?(\/[^?#]+)?(\?[\w\d\-\/=&%]+)?(#[\w\d\-\/]+)?$/,
     rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
     rjsonchars = /^[\],:{}\s]*$/,
     rjsonescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
     rjsontokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
-    rjsonbraces = /(?:^|:|,)(?:\s*\[)+/g;
+    rjsonbraces = /(?:^|:|,)(?:\s*\[)+/g,
+
+    // 常见协议端口定义
+    mport = {
+        'ftp'    : 21,
+        'mailto' : 25,
+        'https'  : 443,
+        'http'   : 80
+    };
 
 _.extend(utils, {
     parseQuery : function(str, separator) {
@@ -196,17 +205,66 @@ _.extend(utils, {
 
     })(),
 
-    parseHash : function(href) {
-        // 提取href中的hash部分
-        // 因为动态生成的anchor标签（通过innerHTML）
-        // 其hash属性为空
+    parseURL : function(url, name) {
+        var location = window.location,
+            res = {},
+            all,
+            auth,
+            host,
+            file;
 
-        var hash = href;
+        url = url || location.toString();
+        all = url.match(rurl);
 
-        if(!hash || hash.indexOf('#') == -1) return '';
-        hash = hash.split('#').pop();
+        if (!all) {
+            return false;
+        }
 
-        return hash;
+        // 获取传输协议
+        res.protocol = (all[1] || location.protocol).split(':')[0];
+
+        // 获取主机信息
+        host = (all[2] || location.host).split('@');
+        if (host.length == 1) {
+            // 不包含用户名密码
+            auth = ['', ''];
+            host = host[0].split(':');
+        } else {
+            // 包含用户名密码
+            auth = host[0].split(':');
+            host = host[1].split(':');
+        }
+
+        res.user = auth[0];
+        res.password = auth[1] || '';
+
+        res.hostname = host[0];
+        res.port = +host[1] || mport[res.protocol.toLowerCase()] || location.port;
+
+        // 获取文件路径
+        res.pathname = all[3] || location.pathname;
+
+        // 获取文件名
+        file = res.pathname.split('/').pop();
+        if (file.indexOf('.') != -1) {
+            res.file = file;
+        } else {
+            if (file != '') {
+                res.pathname += '/';
+            }
+
+            res.file = '';
+        }
+
+        // 获取参数信息
+        res.query = all[4] || '';
+        res.hash = all[5] || '';
+
+        if (name) {
+            return res[name] || '';
+        } else {
+            return res;
+        }
     }
 });
 
