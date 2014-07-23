@@ -134,8 +134,6 @@ define(function(require, exports, module) {
                 var pattern = this.pattern,
                     hash = utils.parseURL(url).hash;
 
-                hash = hash.split('#').pop();
-
                 if (pattern && (hash = hash.match(pattern))) {
                     hash = hash.pop();
                 }

@@ -105,13 +105,14 @@ _.extend(utils, {
 });
 
 
-var rquery = /^[^?]*\?(.+)$/,
-    rurl = /^([\w\d\-]+:\/\/)?([^\/?#]+)?(\/[^?#]+)?(\?[\w\d\-\/=&%]+)?(#[\w\d\-\/]+)?$/,
-    rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+var rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
     rjsonchars = /^[\],:{}\s]*$/,
     rjsonescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
     rjsontokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
     rjsonbraces = /(?:^|:|,)(?:\s*\[)+/g,
+    // rurl = /^([\w\d\-]+:\/\/)?([^\/?#]+)?(\/[^?#]+)?(\?[\w\d\-\/=&%]+)?(#[\w\d\-\/]+)?$/,
+    rurl = /(?:([\w\d\-]+):\/\/|([^\/?#]+)|(\/[^?#]+)|\?([\w\d\-\/=&%]+)|#([\w\d\-\/]+))/g,
+    rquery = /^(?:[^?]*\?)?([\w\d\-\/=&%]+)/,
 
     // 常见协议端口定义
     mport = {
@@ -119,38 +120,11 @@ var rquery = /^[^?]*\?(.+)$/,
         'mailto' : 25,
         'https'  : 443,
         'http'   : 80
-    };
-
-_.extend(utils, {
-    parseQuery : function(str, separator) {
-        var query = String(str).match(rquery),
-            key,
-            value;
-
-        if (query == null) return {};
-
-        query = query.pop();
-        separator = separator || '&';
-
-        return _.reduce(query.split(separator), function(hash, pair) {
-            if (pair.indexOf('=') == -1) return hash;
-
-            pair = decodeURIComponent(pair).split('=');
-
-            key = pair.shift();
-
-            // 如果query中某个变量值包含等号
-            // 我们应该重新组合起来
-            value = pair.join('=');
-
-            if (value != void 0) {
-                value = value.replace('+', ' ');
-            }
-
-            return push(hash, key, value);
-        }, {});
     },
 
+    aurl = 'all protocol host pathname query hash'.split(' ');
+
+_.extend(utils, {
     parseJSON : (function() {
 
         // 参考: http://json.org/json2.js
@@ -207,24 +181,34 @@ _.extend(utils, {
 
     parseURL : function(url) {
         var location = window.location,
+            match = null,
+            index = 1,
+            part,
             res = {},
-            all,
             auth,
             host,
             file;
 
         url = url || location.toString();
-        all = url.match(rurl);
 
-        if (!all) {
-            return false;
-        }
+        rurl.lastIndex = 0;
+        while (match = rurl.exec(url)) {
+            while (!match[index]) index++;
+            res[aurl[index]] = match[index];
+        };
+        // all = url.match(rurl);
+
+        // if (!all) {
+        //     return false;
+        // }
 
         // 获取传输协议
-        res.protocol = (all[1] || location.protocol).split(':')[0];
+        res.protocol = res.protocol || location.protocol;
 
         // 获取主机信息
-        host = (all[2] || location.host).split('@');
+        res.host = res.host || location.host;
+
+        host = res.host.split('@');
         if (host.length == 1) {
             // 不包含用户名密码
             auth = ['', ''];
@@ -242,7 +226,7 @@ _.extend(utils, {
         res.port = +host[1] || mport[res.protocol.toLowerCase()] || location.port;
 
         // 获取文件路径
-        res.pathname = all[3] || location.pathname;
+        res.pathname = res.pathname || location.pathname;
 
         // 获取文件名
         file = res.pathname.split('/').pop();
@@ -257,10 +241,39 @@ _.extend(utils, {
         }
 
         // 获取参数信息
-        res.query = all[4] || '';
-        res.hash = all[5] || '';
+        res.query = res.query || '';
+        res.hash = res.hash || '';
 
         return res;
+    },
+
+    parseQuery : function(str, separator) {
+        var query = String(str).match(rquery),
+            key,
+            value;
+
+        if (query == null) return {};
+
+        query = query.pop();
+        separator = separator || '&';
+
+        return _.reduce(query.split(separator), function(hash, pair) {
+            if (pair.indexOf('=') == -1) return hash;
+
+            pair = decodeURIComponent(pair).split('=');
+
+            key = pair.shift();
+
+            // 如果query中某个变量值包含等号
+            // 我们应该重新组合起来
+            value = pair.join('=');
+
+            if (value != void 0) {
+                value = value.replace('+', ' ');
+            }
+
+            return push(hash, key, value);
+        }, {});
     }
 });
 
