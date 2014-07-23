@@ -16,7 +16,7 @@ var settings = {
     };
     
 
-function Fsm(context, initial) {
+function State(context, initial) {
     // 缓存状态
     cache.set(this, settings.STATES, {length : 0});
     // 一个状态到另个状态的映射
@@ -33,8 +33,11 @@ function Fsm(context, initial) {
     this._index = this._cacheState(initial || 'none');
 }
 
-Fsm.create = function(options, context) {
-    var machine = new Fsm(context, options.initial);
+State.create = function(context, options) {
+    var machine;
+
+    options = _.extend({}, options);
+    machine = new State(context, options.initial);
 
     _.each(options.transits, function(transit) {
         machine.add(transit.action, transit.prev, transit.next);
@@ -47,7 +50,7 @@ Fsm.create = function(options, context) {
     return machine;
 };
 
-Fsm.prototype = {
+State.prototype = {
     _cacheState : function(state) {
         var states = cache.get(this, settings.STATES),
             index;
@@ -144,7 +147,15 @@ Fsm.prototype = {
     }
 };
 
+State.global = new State(window);
 
-module.exports = Fsm.create;
+_.each('add on off fire sync'.split(' '), function(value) {
+    State.create[value] = function() {
+        State.global[value].apply(State.global, arguments);
+    };
+});
+
+
+module.exports = State.create;
 
 });

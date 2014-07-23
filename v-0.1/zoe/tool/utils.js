@@ -205,7 +205,7 @@ _.extend(utils, {
 
     })(),
 
-    parseURL : function(url, name) {
+    parseURL : function(url) {
         var location = window.location,
             res = {},
             all,
@@ -260,11 +260,7 @@ _.extend(utils, {
         res.query = all[4] || '';
         res.hash = all[5] || '';
 
-        if (name) {
-            return res[name] || '';
-        } else {
-            return res;
-        }
+        return res;
     }
 });
 

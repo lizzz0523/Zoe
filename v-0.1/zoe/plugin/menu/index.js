@@ -132,7 +132,7 @@ define(function(require, exports, module) {
 
             getHash : function(url) {
                 var pattern = this.pattern,
-                    hash = utils.parseURL(url, 'hash');
+                    hash = utils.parseURL(url).hash;
 
                 hash = hash.split('#').pop();
 
