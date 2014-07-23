@@ -23,24 +23,24 @@ function Fsm(context, initial) {
     cache.set(this, settings.MAPSET, {});
 
     // 事件系统，用于触发事件
-    this.event = event(context);
+    this._event = event(context);
     // 队列系统，用于保持状态同步
-    this.queue = queue(this);
+    this._queue = queue(this);
 
-    this.isSync = true;
+    this._isSync = true;
 
     // 在状态机内部，我们使用index标记状态的名字
-    this.index = this.cacheState(initial || 'none');
+    this._index = this._cacheState(initial || 'none');
 }
 
 Fsm.create = function(options, context) {
-    var machine = new Fsm(options.initial, context);
+    var machine = new Fsm(context, options.initial);
 
-    _each(options.transits, function(transit) {
+    _.each(options.transits, function(transit) {
         machine.add(transit.action, transit.prev, transit.next);
     });
 
-    _each(options.events, function(event) {
+    _.each(options.events, function(event) {
         machine.on(event.name, event.callback);
     });
 
@@ -48,7 +48,7 @@ Fsm.create = function(options, context) {
 };
 
 Fsm.prototype = {
-    cacheState : function(state) {
+    _cacheState : function(state) {
         var states = cache.get(this, settings.STATES),
             index;
 
@@ -65,28 +65,33 @@ Fsm.prototype = {
         return index;
     },
 
-    getState : function(index) {
+    _getState : function(index) {
         var states = cache.get(this, settings.STATES);
-        return states[_.isUndefined(index) ? this.index : index];
+        return states[_.isUndefined(index) ? this._index : index];
     },
 
     add : function(action, prev, next) {
-        var prev = this.cacheState(prev || 'none'),
-            next = this.cacheState(next),
-
-            mapset = cache.get(this, settings.MAPSET),
+        var mapset = cache.get(this, settings.MAPSET),
             map;
+
+        if (arguments.lenght < 3) {
+            next = prev;
+            prev = void 0;
+        }
+
+        prev = this._cacheState(prev || 'none');
+        next = this._cacheState(next);
 
         map = mapset[action] || (mapset[action] = []);
         map[prev] = next;
     },
 
     on : function(event, callback) {
-        return this.event.on(event, callback);
+        return this._event.on(event, callback);
     },
 
     off : function(event, callback) {
-        return this.event.off(event, callback);
+        return this._event.off(event, callback);
     },
 
     fire : function(action, asyn) {
@@ -94,13 +99,13 @@ Fsm.prototype = {
             map = mapset[action],
 
             prev = {
-                index : this.index,
-                state : this.getState(),
+                index : this._index,
+                state : this._getState(),
             },
             next = {};
 
         // 如果没有同步，则忽略这次调用
-        if (!this.isSync) return;
+        if (!this._isSync) return;
 
         next.index = map[prev.index];
         next.state = this.getState(next.index);
@@ -108,34 +113,34 @@ Fsm.prototype = {
         // 如果该动作没有使状态发生变化
         // 则触发silent事件
         if (_.isUndefined(next.index)) {
-            this.event.emit('silent:' + prev.state, action);
+            this._event.emit('silent:' + prev.state, action);
             return;
         }
 
-        this.queue.add(settings.ASYN_QUEUEU, function() {
-            this.event.emit('leave:' + prev.state, action);
+        this._queue.add(settings.ASYN_QUEUEU, function() {
+            this._event.emit('leave:' + prev.state, action);
 
-            this.isSync = false;
+            this._isSync = false;
             if (asyn) return
                 
-            this.queue.next(settings.ASYN_QUEUEU);
+            this._queue.next(settings.ASYN_QUEUEU);
         });
 
-        this.queue.add(settings.ASYN_QUEUEU, function() {
+        this._queue.add(settings.ASYN_QUEUEU, function() {
             this.event.emit('enter:' + next.state, action);
 
-            this.index = next.index;
-            this.isSync = true;
+            this._index = next.index;
+            this._isSync = true;
 
-            this.queue.next(settings.ASYN_QUEUEU);
+            this._queue.next(settings.ASYN_QUEUEU);
         });
 
-        this.queue.next(settings.ASYN_QUEUEU);
+        this._queue.next(settings.ASYN_QUEUEU);
     },
 
     sync : function() {
-        if (this.isSync) return;
-        this.queue.next(settings.ASYN_QUEUEU);
+        if (this._isSync) return;
+        this._queue.next(settings.ASYN_QUEUEU);
     }
 };
 

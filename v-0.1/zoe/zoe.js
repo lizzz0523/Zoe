@@ -30,33 +30,39 @@ _.extend(zoe, {
 
 
 _.extend(zoe, {
-    views : {},
+    _views : {},
 
     zuid : 1,
 
     find : function(viewId) {
-        if (zoe.views[viewId]) {
-            return zoe.views[viewId];
+        if (zoe._views[viewId]) {
+            return zoe._views[viewId];
         } else {
             return null;
+        }
+    },
+
+    push : function(viewId, view) {
+        if (!zoe._views[viewId]) {
+            zoe._views[viewId] = view;
         }
     }
 });
 
 
 _.extend(zoe, {
-    event : event(zoe)
+    _event : event(zoe)
 });
 
 _.each('on one off emit'.split(' '), function(method) {
     zoe[method] = function() {
-        zoe.event[method].apply(zoe.event, arguments);
+        zoe._event[method].apply(zoe._event, arguments);
     };
 });
 
 
 _.extend(zoe, {
-    tpath : 'plugin/{s}/index.js',
+    _tpath : 'plugin/{s}/index.js',
 
     use : function(plugins, callback) {
         var args = [],
@@ -66,7 +72,7 @@ _.extend(zoe, {
         len = plugins.length;
         
         _.each(plugins, function(plugin, index) {
-            require.async(zoe.tpath.replace(/\{s\}/g, plugin.toLowerCase()), function(View) {
+            require.async(zoe._tpath.replace(/\{s\}/g, plugin.toLowerCase()), function(View) {
                 args[index] = View;
 
                 len--;
@@ -170,7 +176,7 @@ $('[data-zoe]').each(function(index, elem) {
         $elem.data('id', viewId = 'z_view-' + zoe.zuid++);
     }
       
-    if (!zoe.views[viewId]) {
+    if (!zoe.find(viewId)) {
         viewData = getData($elem.data('zoe'));
 
         if (viewData) {
@@ -179,8 +185,7 @@ $('[data-zoe]').each(function(index, elem) {
 
             ready++;
             zoe.use(viewData.plugin, function(View) {
-                view = new View(options);
-                zoe.views[viewId] = view.render();
+                zoe.push(viewId,  (view = new View(options)).render());
 
                 if (viewBind) {
                     zoe.one('bind', function() {
