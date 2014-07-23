@@ -110,7 +110,6 @@ var rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u202
     rjsonescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
     rjsontokens = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
     rjsonbraces = /(?:^|:|,)(?:\s*\[)+/g,
-    // rurl = /^([\w\d\-]+:\/\/)?([^\/?#]+)?(\/[^?#]+)?(\?[\w\d\-\/=&%]+)?(#[\w\d\-\/]+)?$/,
     rurl = /(?:([\w\d\-]+):\/\/|([^\/?#]+)|(\/[^?#]+)|\?([\w\d\-\/=&%]+)|#([\w\d\-\/]+))/g,
     rquery = /^(?:[^?]*\?)?([\w\d\-\/=&%]+)/,
 
@@ -196,11 +195,6 @@ _.extend(utils, {
             while (!match[index]) index++;
             res[aurl[index]] = match[index];
         };
-        // all = url.match(rurl);
-
-        // if (!all) {
-        //     return false;
-        // }
 
         // 获取传输协议
         res.protocol = res.protocol || location.protocol;
