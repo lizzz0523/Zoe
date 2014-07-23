@@ -6,7 +6,7 @@ define(function(require, exports, module) {
 var _ = require('underscore');
 
 
-var hook = 'cache-' + _.uniqueId(),
+var hook = '_cache' + _.uniqueId(),
     
     cache = [],
     // 自增

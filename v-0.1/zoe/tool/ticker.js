@@ -13,7 +13,10 @@ var win = window,
         INTERVAL : 1000 / 60
     },
 
+    hook = '_tick' + _.uniqueId(),
+
     tickers = [],
+    tickId = 1,
 
     requestAnimFrame,
     cancelAnimFrame,
@@ -68,11 +71,11 @@ function stop() {
 module.exports = {
     enter : function(callback, context) {
         // 如果该回调已经注册过，就不要重复注册了
-        if (callback.tickId) return;
+        if (callback[hook]) return;
 
-        callback.tickId = 'tick-' + _.uniqueId();
+        callback[hook] = tickId++;
         tickers.push({
-            context : context || this,
+            context : context || window,
             callback : callback
         });
 
@@ -92,13 +95,13 @@ module.exports = {
             // 清除ticker列队
             tickers.length = 0;
         } else {
-            if (!callback.tickId) return;
+            if (!callback[hook]) return;
 
             while (++i < len) {
                 ticker = tickers[i];
-                if (callback.tickId === ticker.callback.tickId) {
+                if (callback[hook] === ticker.callback[hook]) {
                     callback = ticker.callback;
-                    delete callback.tickId;
+                    delete callback[hook];
 
                     tickers.splice(i, 1);
                     

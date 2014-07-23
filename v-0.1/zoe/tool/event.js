@@ -9,7 +9,11 @@ var cache = require('tool/cache'),
 
 var settings = {
         CACHE : 'events'
-    };
+    },
+
+    hook = '_event' + _.uniqueId(),
+
+    eventId = 1;
     
 
 function Event(context) {
@@ -26,9 +30,9 @@ Event.prototype = {
         var events = cache.get(this, settings.CACHE),
             handlers = events[name] || (events[name] = []);
 
-        if (callback.eventId) return;
+        if (callback[hook]) return;
 
-        callback.eventId = 'event-' + _.uniqueId();
+        callback[hook] = eventId++;
         handlers.push({
             context : this.context || this,
             callback : callback
@@ -45,7 +49,7 @@ Event.prototype = {
             });
 
         this.on(name, once);
-        callback.eventId = once.eventId;
+        callback[hook] = once[hook];
 
         return callback;
     },
@@ -63,14 +67,14 @@ Event.prototype = {
         if (!callback) {
             handlers.length = 0;
         } else {
-            if (!callback.eventId) return;
+            if (!callback[hook]) return;
 
             while (++i < len) {
                 handler = handlers[i];
 
-                if (callback.eventId === handler.callback.eventId) {
+                if (callback[hook] === handler.callback[hook]) {
                     callback = handler.callback;
-                    delete callback.eventId;
+                    delete callback[hook];
 
                     handlers.splice(i, 1);
                     
