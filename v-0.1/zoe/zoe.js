@@ -75,8 +75,7 @@ _.extend(zoe, {
             require.async(zoe._tpath.replace(/\{s\}/g, plugin.toLowerCase()), function(View) {
                 args[index] = View;
 
-                len--;
-                if (len == 0) {
+                if (--len == 0) {
                     callback.apply(zoe, args);
                 }
             });
@@ -99,62 +98,60 @@ var inited,
         });
     },
 
-    rparam = /^[^\[]*\[([^\]]+)\]/,
-    rdata = /^([^\[]+)(\[[^\]]*\])?$/,
+    rdata = /^([^\[]+)(\[[\w\s\-$,=\[\]]*\])?(?:[^\]]*)$/,
+    rparam = /^[^\[]*\[([\w\s\-$,=\[\]]+)\][^\]]*$/,
 
-    getData = function(str) {
+    parseData = function(str) {
         var data = String(str).match(rdata);
 
         if (data) {
             return {
                 plugin : data[1] || '',
-                params : data[2]
+                params : data[2] || '[]'
             }
         }
 
         return false;
     },
 
-    getParam = function(str, separator) {
-        var param = String(str).match(rparam),
+    parseParam = function(str, separator) {
+        var params = String(str).match(rparam),
             key,
             value;
 
-        if (param == null) return {};
-        param = param.pop();
+        if (params == null) return {};
+
+        params = utils.escape(params[1]);
         separator = separator || ',';
 
-        return _.reduce(param.split(separator), function(hash, pair) {
-            if (pair.length == 0) return hash;
+        return _.reduce(params.split(separator), function(hash, param) {
+            if (param.length == 0) return hash;
 
-            pair = utils.escape(pair).split('=');
+            param = param.split('=');
 
-            key = pair.shift();
-            key = utils.trim(key);
-
-            value = pair.join('=');
-            value = utils.trim(value);
+            key = utils.trim(param.shift());
+            value = utils.trim(param.join('='));
 
             if (value.length != 0) {
                 // 内部转换字符串到对应的值
                 if (_.isFinite(value)) {
+                    // number
                     value = +value;
                 } else {
+                    // boolean & string
                     value = value.match(/^true$|^false$/) ? value == 'true' : value;
+                }
+
+                if (_.isString(value) && value.charAt(0) == '[') {
+                    // 递归获取参数
+                    value = getParam(value, separator);
                 }
             } else {
                 // 如果字符串为空，默认转换成true
                 value = true;
             }
 
-            if (key in hash) {
-                if (!_.isArray(hash[key])) {
-                    hash[key] = [hash[key]];
-                }
-                hash[key].push(value);
-            } else {
-                hash[key] = value;
-            }
+            hash[key] = value;
 
             return hash;
         }, {});
@@ -167,7 +164,7 @@ $('[data-zoe]').each(function(index, elem) {
         
         viewId = $elem.data('id'),
         viewBind = $elem.data('for'), 
-        viewData,
+        viewData = $elem.data('zoe'),
         view,
 
         options;
@@ -177,10 +174,10 @@ $('[data-zoe]').each(function(index, elem) {
     }
       
     if (!zoe.find(viewId)) {
-        viewData = getData($elem.data('zoe'));
+        viewData = parseData(viewData);
 
         if (viewData) {
-            options = getParam(viewData.params);
+            options = parseParam(viewData.params);
             options.el = $elem[0];
 
             ready++;
@@ -192,7 +189,7 @@ $('[data-zoe]').each(function(index, elem) {
                         try {
                             zoe.find(viewBind).binding(view);
                         } catch(e) {
-                            zoe.log('View Binding Error');
+                            zoe.log('View Binding Error:' + e);
                         }
                     });
                 }
