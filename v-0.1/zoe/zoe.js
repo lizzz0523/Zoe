@@ -126,6 +126,7 @@ var inited,
             stack = [],
             last = params,
 
+            // 设置global标致，是为了使用lastIndex
             rterm = /[^=,\[\]]*/g,
             rsign =/^(?:=|,)$/;
 
@@ -225,11 +226,10 @@ var inited,
                     phase = 2;
 
                     break;
-                    // 找符号
 
                 default :
                     params = params.slice(1);
-                    phase = 0;
+                    phase = 2;
             }
         }
 
