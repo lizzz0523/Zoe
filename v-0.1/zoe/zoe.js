@@ -246,8 +246,6 @@ var inited,
         return hash[key];
     };
 
-console.log(parseParam('[a=1, b, c=[a=3, z=6], d=4]'));
-
 inited = false;
 
 $('[data-zoe]').each(function(index, elem) {
