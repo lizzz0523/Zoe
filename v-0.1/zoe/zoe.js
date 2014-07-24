@@ -206,6 +206,8 @@ var inited,
                 continue;
             }
 
+            rterm.lastIndex = 0;
+
             switch (phase) {
                 case 0 :
                     // 找key值
@@ -237,8 +239,6 @@ var inited,
 
                     break;
             }
-
-            rterm.lastIndex = 0;
         }
 
         while (stack.length) popStack();
