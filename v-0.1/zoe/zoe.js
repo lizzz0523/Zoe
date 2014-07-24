@@ -127,10 +127,12 @@ var inited,
             last = params,
 
             // 设置global标致，是为了使用lastIndex
-            rterm = /[^=,\[\]]*/g,
+            rterm = /[^=\,\[\]]*/g,
             rsign =/^(?:=|,)$/;
 
         function parseValue(value) {
+            value = utils.trim(value);
+
             if (value.length != 0) {
                 // 内部转换字符串到对应的值
                 if (_.isFinite(value)) {
@@ -149,6 +151,8 @@ var inited,
         }
 
         function parseKey(key) {
+            key = utils.trim(key);
+
             // 将key中的非法字符去掉
             if (key = utils.escape(key)
                 .replace(/[^\w$-]/g, '-')
@@ -230,13 +234,19 @@ var inited,
                 default :
                     params = params.slice(1);
                     phase = 2;
+
+                    break;
             }
+
+            rterm.lastIndex = 0;
         }
 
         while (stack.length) popStack();
 
         return hash[key];
     };
+
+console.log(parseParam('[a=1, b, c=[a=3, z=6], d=4]'));
 
 inited = false;
 
