@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
 
-    var zoe = require('zoe');
+    window.zoe = require('zoe');
     
 });

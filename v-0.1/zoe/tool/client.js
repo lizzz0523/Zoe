@@ -6,7 +6,9 @@ define(function(require, exports, module) {
 var _ = require('underscore');
 
 
-var client = {};
+var client = {
+        version : 'zoe-client 0.0.1'
+    };
 
 
 var doc = document,
@@ -38,6 +40,7 @@ _.extend(client, {
 		}
     }
 });
+
 
 module.exports = client;
 

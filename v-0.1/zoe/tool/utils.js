@@ -1,3 +1,6 @@
+// 工具函数
+// by lizzz (http://lizzz0523.github.io/)
+
 define(function(require, exports, module) {
 
 var _ = require('underscore');
@@ -25,7 +28,7 @@ var slice = function(arr, start, end) {
 
 
 var utils = {
-    version : '0.0.1',
+    version : 'zoe-utils 0.0.1',
 
     guid : function() {
         var d = new Date().getTime(), r;
@@ -100,6 +103,14 @@ _.extend(utils, {
 
         return String(str).replace(rescape, function(match) {
             return mescape[match] || '\\u' + ('0000' + match.charCodeAt(0).toString(16)).slice(-4);
+        });
+    },
+
+    camelCase : function(str){
+        if (str == null) return '';
+
+        return String(str).replace(rcamelCase, function(all, first){
+            return first.toUpperCase();
         });
     }
 });

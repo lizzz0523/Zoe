@@ -8,16 +8,18 @@ var utils = require('tool/utils'),
 
     
 function zoe(selector) {
-    if (typeof selector == 'string') {
-        return zoe.find(selector);
-    } else {
+    if (_.isFunction(selector)) {
+        // 如果参数为回调，则加入到ready事件列队
         return zoe.on('ready', selector);
+    } else {
+        // 否则当成选择器，调用zoe.find方法
+        return zoe.find(String(selector));
     }
 }
 
 
 _.extend(zoe, {
-    version : 'zoe-0.0.1',
+    version : 'zoe 0.0.1',
 
     log : console && console.log
     ? function() {
@@ -99,7 +101,6 @@ var inited,
     },
 
     rdata = /^([^\[]+)(\[[\w\s\-$,=\[\]]*\])?(?:[^\]]*)$/,
-    rparam = /^[^\[]*\[([\w\s\-$,=\[\]]+)\][^\]]*$/,
 
     parseData = function(str) {
         var data = String(str).match(rdata);
@@ -114,24 +115,21 @@ var inited,
         return false;
     },
 
-    parseParam = function(str, separator) {
-        var params = String(str).match(rparam),
-            key,
-            value;
+    parseParam = function(params) {
+        var key = '',
+            hash = {},
 
-        if (params == null) return {};
+            phase = 2,
+            first,
+            index,
 
-        params = utils.escape(params[1]);
-        separator = separator || ',';
+            stack = [],
+            last = params,
 
-        return _.reduce(params.split(separator), function(hash, param) {
-            if (param.length == 0) return hash;
+            rterm = /[^=,\[\]]*/g,
+            rsign =/^(?:=|,)$/;
 
-            param = param.split('=');
-
-            key = utils.trim(param.shift());
-            value = utils.trim(param.join('='));
-
+        function parseValue(value) {
             if (value.length != 0) {
                 // 内部转换字符串到对应的值
                 if (_.isFinite(value)) {
@@ -139,22 +137,105 @@ var inited,
                     value = +value;
                 } else {
                     // boolean & string
-                    value = value.match(/^true$|^false$/) ? value == 'true' : value;
-                }
-
-                if (_.isString(value) && value.charAt(0) == '[') {
-                    // 递归获取参数
-                    value = getParam(value, separator);
+                    value = value.match(/^(?:true|false)$/) ? value == 'true' : value;
                 }
             } else {
                 // 如果字符串为空，默认转换成true
                 value = true;
             }
 
-            hash[key] = value;
+            return value;
+        }
 
-            return hash;
-        }, {});
+        function parseKey(key) {
+            // 将key中的非法字符去掉
+            if (key = utils.escape(key)
+                .replace(/[^\w$-]/g, '-')
+                .replace('_', '-')
+            ) {
+                return utils.camelCase(key);   
+            } else {
+                return  '';
+            }
+        }
+
+        function pushStack() {
+            var temp = {hash : hash, key : key};
+
+            stack.push(temp);
+
+            hash = {};
+            key = '';
+        }
+
+        function popStack() {
+            var temp = stack.pop();
+
+            temp.hash[temp.key] = hash;
+
+            hash = temp.hash;
+            key = '';
+        }
+
+        while (params) {
+            first = params.charAt(0);
+
+            if (first.match(rsign)) {
+                params = params.slice(1);
+                phase = first == ',' ? 0 : 1;
+
+                continue;
+            } else if (params.charAt(0) == '[') {
+                pushStack();
+
+                params = params.slice(1);
+                phase = 0;
+
+                continue;
+            } else if (params.charAt(0) == ']') {
+                popStack();
+
+                params = params.slice(1);
+                phase = 2;
+
+                continue;
+            }
+
+            switch (phase) {
+                case 0 :
+                    // 找key值
+                    index = rterm.exec(params) ? rterm.lastIndex : -1;
+
+                    key = parseKey(index < 0 ? params : params.slice(0, index));
+                    hash[key] = true;
+
+                    params = params.slice(index);
+                    phase = 2;
+
+                    break;
+
+                case 1 :
+                    // 找value值
+                    index = rterm.exec(params) ? rterm.lastIndex : -1;
+
+                    hash[key] = parseValue(index < 0 ? params : params.slice(0, index));
+                    key = '';
+
+                    params = params.slice(index);
+                    phase = 2;
+
+                    break;
+                    // 找符号
+
+                default :
+                    params = params.slice(1);
+                    phase = 0;
+            }
+        }
+
+        while (stack.length) popStack();
+
+        return hash[key];
     };
 
 inited = false;
@@ -189,7 +270,7 @@ $('[data-zoe]').each(function(index, elem) {
                         try {
                             zoe.find(viewBind).binding(view);
                         } catch(e) {
-                            zoe.log('View Binding Error:' + e);
+                            zoe.log('View Binding Error:' + viewId + '-->' + viewBind);
                         }
                     });
                 }
