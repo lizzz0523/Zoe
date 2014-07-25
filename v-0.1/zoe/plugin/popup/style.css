@@ -1,0 +1,73 @@
+.z_html-popup {
+    height: 100%;
+    width: 100%;
+    overflow: visible;
+}
+
+.z_body-popup {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.z_pop-base {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #333;
+}
+
+.z_pbase_layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: white;
+    box-shadow: 0 0 3px 1px rgba(0,0,0,0.9);
+
+    -webkit-transition: all 0.2s ease;
+}
+
+.z_pbase_stage {
+    background-color: transparent;
+}
+
+.z_pbase_overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+}
+
+.z_pbase_view {
+    position: relative;
+    margin: 40px auto;
+    width: 400px;
+    height: 300px;
+    background-color: white;
+    box-shadow: 0 0 3px 1px rgba(0,0,0,0.9);
+
+    -webkit-transition: all 0.2s ease;
+}
+
+.z_popup_scale-up {
+    -webkit-transform: scale(1);
+}
+
+.z_popup_scale-down {
+    -webkit-transform: scale(0.95);
+}
+
+.z_popup_fade-in {
+    opacity: 1;
+}
+
+.z_popup_fade-out {
+    opacity: 0;
+}
