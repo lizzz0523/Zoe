@@ -32,10 +32,6 @@
     -webkit-transition: all 0.2s ease;
 }
 
-.z_pbase_stage {
-    background-color: transparent;
-}
-
 .z_pbase_overlay {
     position: absolute;
     top: 0;
@@ -43,31 +39,20 @@
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.6);
+    opacity: 0;
+
+    -webkit-transition: all 0.2s ease;
 }
 
 .z_pbase_view {
     position: relative;
     margin: 40px auto;
-    width: 400px;
-    height: 300px;
     background-color: white;
     box-shadow: 0 0 3px 1px rgba(0,0,0,0.9);
 
     -webkit-transition: all 0.2s ease;
 }
 
-.z_popup_scale-up {
-    -webkit-transform: scale(1);
-}
-
-.z_popup_scale-down {
-    -webkit-transform: scale(0.95);
-}
-
-.z_popup_fade-in {
-    opacity: 1;
-}
-
-.z_popup_fade-out {
-    opacity: 0;
+.z_pbase_stage {
+    background-color: transparent;
 }

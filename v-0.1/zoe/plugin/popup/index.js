@@ -135,6 +135,7 @@ define(function(require, exports, module) {
             show : function() {
                 var $elem = this.$el,
                     $layer = this.$layer,
+                    $overlay = this.$overlay,
 
                     queue = this.queue,
                     qname = 'popup',
@@ -170,6 +171,11 @@ define(function(require, exports, module) {
                         });
                     }
 
+                    queue.add(qname, function() {
+                        $overlay.css('opacity', 1);
+                        queue.next(qname);
+                    });
+
                     queue.next(qname);
                 }
 
@@ -181,6 +187,7 @@ define(function(require, exports, module) {
             hide : function() {
                 var $elem = this.$el,
                     $layer = this.$layer,
+                    $overlay = this.$overlay,
 
                     queue = this.queue,
                     qname = 'popup',
@@ -188,11 +195,17 @@ define(function(require, exports, module) {
                     visible = this.visible;
 
                 if (visible) {
+                    queue.add(qname, function() {
+                        $overlay.css('opacity', 0);
+                        queue.next(qname);
+                    });
+
                     if (support) {
                         queue.add(qname, function() {
                             $layer.each(function(index) {
                                 $(this).css(transform, 'scale(1)');
                             });
+                            $overlay.css('opacity', 0);
 
                             queue.next(qname);
                         });
@@ -216,6 +229,10 @@ define(function(require, exports, module) {
 
                 return this;
             },
+
+            pop : function(view) {
+                
+            }
         }, {
             instance : null,
 
