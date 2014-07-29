@@ -26,6 +26,10 @@ Event.create = function(context) {
 };
 
 Event.prototype = {
+    version : 'zoe-event 0.0.1'
+};
+
+_.extend(Event.prototype, {
     on : function(name, callback) {
         var events = cache.get(this, settings.CACHE),
             handlers = events[name] || (events[name] = []);
@@ -107,7 +111,7 @@ Event.prototype = {
             handler.callback.apply(handler.context, args);
         }
     }
-};
+});
 
 Event.global = new Event(window);
 

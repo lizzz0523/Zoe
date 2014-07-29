@@ -22,6 +22,10 @@ Queue.create = function(context) {
 };
 
 Queue.prototype = {
+    version : 'zoe-queue 0.0.1'
+};
+
+_.extend(Queue.prototype, {
     add : function(name, callback) {
         var queues = cache.get(this, settings.CACHE),
             players = queues[name] || (queues[name] = []);
@@ -66,7 +70,7 @@ Queue.prototype = {
 
         return players ? players.length : 0;
     }
-};
+});
 
 Queue.global = new Queue(window);
 
