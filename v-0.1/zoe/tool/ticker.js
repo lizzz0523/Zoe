@@ -69,7 +69,7 @@ function stop() {
 
 
 module.exports = {
-    enter : function(callback, context) {
+    enter : function(context, callback) {
         // 如果该回调已经注册过，就不要重复注册了
         if (callback[hook]) return;
 

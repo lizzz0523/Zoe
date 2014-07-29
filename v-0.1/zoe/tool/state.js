@@ -51,6 +51,8 @@ State.create = function(context, options) {
 };
 
 State.prototype = {
+    version : 'zoe-state 0.0.1',
+
     _cacheState : function(state) {
         var states = cache.get(this, settings.STATES),
             index;
@@ -71,8 +73,10 @@ State.prototype = {
     _getState : function(index) {
         var states = cache.get(this, settings.STATES);
         return states[_.isUndefined(index) ? this._index : index];
-    },
+    }
+};
 
+_.extend(State.prototype, {
     add : function(action, prev, next) {
         var mapset = cache.get(this, settings.MAPSET),
             map;
@@ -145,7 +149,7 @@ State.prototype = {
         if (this._isSync) return;
         this._queue.next(settings.ASYN_QUEUEU);
     }
-};
+});
 
 State.global = new State(window);
 
