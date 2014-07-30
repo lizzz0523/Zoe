@@ -197,7 +197,7 @@ define(function(require, exports, module) {
                     video = this.video,
                     init = this.init;
 
-                if (data && tmpl && _.isFunction(tmpl)) {
+                if (data) {
                     data.each(function(model) {
                         var item = new ZTape({
                                 zid    : model.id || model.cid,

@@ -265,7 +265,7 @@ define(function(require, exports, module) {
                     lng = this.lng,
                     init = this.init;
 
-                if (data && tmpl && _.isFunction(tmpl)) {
+                if (data) {
                     data.each(function(model) {
                         var item = new ZSite({
                                 zid   : model.id || model.cid,
