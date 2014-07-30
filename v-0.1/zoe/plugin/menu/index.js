@@ -12,6 +12,7 @@ define(function(require, exports, module) {
 
 
     var defaults = {
+            'tmpl'    : _.template('<a href="#<%= target %>"><%= text %></a>'),
             'pattern' : false,       
             'repeat'  : false, //重复标志，由于现实按钮能否重复点击
             'init'    : ''
@@ -20,12 +21,6 @@ define(function(require, exports, module) {
 
     var ZMenu = ZView.extend({
             terminal : true,
-
-            tmpl : _.template([
-
-                '<a href="#<%= target %>"><%= text %></a>'
-
-            ].join('')),
 
             events : {
                 'click a' : 'clickTab'
@@ -60,7 +55,7 @@ define(function(require, exports, module) {
 
                     init = this.init;
 
-                if (data && tmpl && _.isFunction(tmpl)) {
+                if (data) {
                     this.data.each(function(model) {
                         this.append(tmpl(model.toJSON()));
                     }, this);

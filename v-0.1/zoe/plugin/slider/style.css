@@ -21,22 +21,22 @@
     height: 100%;
 }
 
-.z_slider-v .z_slider_view {
+.z_slider .z_slider_view-v {
     width: 100%;
     height: 200%;
 }
 
-.z_slider-v .z_slider_block {
+.z_slider .z_slider_view-v .z_slider_block {
     width: 100%;
     height: 50%;
 }
 
-.z_slider-h .z_slider_view {
+.z_slider .z_slider_view-h {
     width: 200%;
     height: 100%;
 }
 
-.z_slider-h .z_slider_block {
+.z_slider .z_slider_view-h .z_slider_block {
     width: 50%;
     height: 100%;
 }

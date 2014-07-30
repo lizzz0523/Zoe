@@ -150,7 +150,7 @@ _.extend(utils, {
                     } else {
                         delete value[k];
                     }
-                })
+                });
             }
 
             return reviver.call(list, key, value);

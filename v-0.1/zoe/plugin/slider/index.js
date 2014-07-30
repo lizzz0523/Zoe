@@ -53,13 +53,13 @@ define(function(require, exports, module) {
         }),
 
         ZSlider = ZPanel.extend({
-            template : [
+            template : _.template([
 
                 '<div class="z_slider_mask">',
-                    '<div class="z_slider_view"></div>',
+                    '<div class="z_slider_view <% if(vertical){ %>z_slider_view-v<% }else{ %>z_slider_view-h<% } %>"></div>',
                 '</div>'
             
-            ].join(''),
+            ].join('')),
 
             events : {
                 'mouseenter' : 'hoverIn',
@@ -90,14 +90,10 @@ define(function(require, exports, module) {
 
                 $data.detach();
 
-                $elem.html(this.template);
+                $elem.html(this.template({
+                    vertical : vertical
+                }));
                 $elem.addClass('z_slider');
-
-                if (vertical) {
-                    $elem.addClass('z_slider-v');
-                } else {
-                    $elem.addClass('z_slider-h');
-                }
 
                 $view = this.$('.z_slider_view');
                 $mask = this.$('.z_slider_mask');
@@ -119,7 +115,7 @@ define(function(require, exports, module) {
 
                     init = this.init;
 
-                if (data && tmpl && _.isFunction(tmpl)) {
+                if (data) {
                     data.each(function(model) {
                         var item = new ZBlock({
                                 zid  : model.id || model.cid,

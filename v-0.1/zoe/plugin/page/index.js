@@ -12,6 +12,7 @@ define(function(require, exports, module) {
 
 
     var defaults = {
+            'tmpl'    : _.template('<a href="#page/<%= index %>"><%= index + 1 %></a>'),
             'pattern' : /^page\/([\d\w][\d\w\s]*)$/,
             'total'   : 0,
             'init'    : 0
@@ -20,12 +21,6 @@ define(function(require, exports, module) {
 
     var ZPage = ZView.extend({
             terminal : true,
-
-            tmpl : _.template([
-
-                '<a href="#page/<%= index %>"><%= index + 1 %></a>',
-
-            ].join('')),
 
             events : {
                 'click a' : 'clickPage'
@@ -63,7 +58,7 @@ define(function(require, exports, module) {
 
                     init = this.init;
 
-                if (data && tmpl && _.isFunction(tmpl)) {
+                if (data) {
                     len = data.length;
                 } else {
                     len = this.total;

@@ -103,7 +103,7 @@ define(function(require, exports, module) {
                     speed = this.speed,
                     init = this.init;
 
-                if (data && tmpl && _.isFunction(tmpl)) {
+                if (data) {
                     data.each(function(model) {
                         var item = new ZBlock({
                                 zid   : model.id || model.cid,

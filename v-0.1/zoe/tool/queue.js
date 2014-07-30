@@ -14,12 +14,8 @@ var settings = {
 
 function Queue(context) {
     cache.set(this, settings.CACHE, {});
-    this.context = context;
+    this.context = context || this;
 }
-
-Queue.create = function(context) {
-    return new Queue(context);
-};
 
 Queue.prototype = {
     version : 'zoe-queue 0.0.1'
@@ -34,7 +30,7 @@ _.extend(Queue.prototype, {
             queues[name] =  _.clone(callback);
         } else {
             players.push({
-                context : this.context || this,
+                context : this.context,
                 callback : callback
             });
         }
@@ -72,6 +68,12 @@ _.extend(Queue.prototype, {
     }
 });
 
+// 对外接口
+Queue.create = function(context) {
+    return new Queue(context);
+};
+
+// 全局列队系统
 Queue.global = new Queue(window);
 
 _.each('add next clear size'.split(' '), function(value) {

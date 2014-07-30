@@ -22,10 +22,8 @@ define(function(require, exports, module) {
 
             template : _.template(''),
 
-            tmpl : _.template(''),
-
             initialize : function(options) {
-                _.extend(this, _.pick(options, ['zid', 'terminal', 'visible', 'template', 'tmpl']));
+                _.extend(this, _.pick(options, ['zid', 'terminal', 'visible', 'template']));
 
                 // 当options包含data和属性
                 if (options.data) {
@@ -36,6 +34,8 @@ define(function(require, exports, module) {
                         // 如果不是，则将data转换成Data对象
                         this.data = this.parse(options.data);
                     }
+
+                    this.tmpl = (options.tmpl && _.isFunction(options.tmpl)) ? options.tmpl : _.template('');
                 }
 
                 // 重构节点的dom结构     
@@ -86,11 +86,10 @@ define(function(require, exports, module) {
                     data = this.data,
                     tmpl = this.tmpl;
 
-                    external = data && tmpl && _.isFunction(tmpl),
                     terminal = this.terminal;
 
                 if (!terminal) {
-                    if (external) {
+                    if (data) {
                         data.each(function(model) {
                             var item = new ZView({
                                     data : model.toJSON(),
@@ -112,8 +111,8 @@ define(function(require, exports, module) {
                         }, this);
                     }
                 } else {
-                    if (external) {
-                        this.data.each(function(model) {
+                    if (data) {
+                        data.each(function(model) {
                             this.append(tmpl(model.toJSON()));
                         }, this);
                     } else {
