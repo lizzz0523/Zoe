@@ -20,6 +20,8 @@ define(function(require, exports, module) {
 
 
     var ZMenu = ZView.extend({
+            ztype : 'menu',
+
             terminal : true,
 
             events : {
@@ -30,21 +32,6 @@ define(function(require, exports, module) {
                 _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
                 ZView.prototype.initialize.call(this, options);
-            },
-
-            reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children();
-
-                $data.detach();
-
-                $elem.html(this.template({}));
-                $elem.addClass('z_menu');
-
-                this.$data = $data;
-                this.$inner = $elem;
-
-                return this;
             },
 
             render : function() {
@@ -107,6 +94,8 @@ define(function(require, exports, module) {
 
                 this.curTab = tab;
                 this.trigger('update', this.curTab);
+
+                return this;
             },
 
             current : function() {

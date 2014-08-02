@@ -17,27 +17,14 @@ define(function(require, exports, module) {
 
 
     var ZBlock = ZView.extend({
+            ztype : 'panel_block',
+
             terminal : true,
 
             initialize : function(options) {
                 _.extend(this, _.pick(options, ['speed']));
 
                 ZView.prototype.initialize.call(this, options);
-            },
-
-            reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children();
-
-                $data.detach();
-
-                $elem.html(this.template({}));
-                $elem.addClass('z_panel_block');
-
-                this.$data = $data;
-                this.$inner = $elem;
-
-                return this;
             },
 
             show : function(slient) {
@@ -61,11 +48,13 @@ define(function(require, exports, module) {
         }),
 
         ZPanel = ZView.extend({
-            template : [
+            ztype : 'panel',
+
+            template : _.template([
 
                 '<div class="z_panel_view"></div>',
 
-            ].join(''),
+            ].join('')),
             
             initialize : function(options) {
                 _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
@@ -74,21 +63,13 @@ define(function(require, exports, module) {
             },
 
             reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children(),
-                    
-                    $view;
+                var $view;
 
-                $data.detach();
-
-                $elem.html(this.template);
-                $elem.addClass('z_panel');
+                ZView.prototype.reset.call(this);
 
                 $view = this.$('.z_panel_view');
 
-                this.$data = $data;
                 this.$inner = $view;
-
                 this.$view = $view;
 
                 return this;

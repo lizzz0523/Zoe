@@ -34,25 +34,14 @@ define(function(require, exports, module) {
 
 
     var ZBlock = ZView.extend({
-            terminal : true,
+            ztype : 'slider_block',
 
-            reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children();
-
-                $data.detach();
-
-                $elem.html(this.template({}));
-                $elem.addClass('z_slider_block');
-
-                this.$data = $data;
-                this.$inner = $elem;
-
-                return this;
-            }
+            terminal : true
         }),
 
         ZSlider = ZPanel.extend({
+            ztype : 'slider',
+
             template : _.template([
 
                 '<div class="z_slider_mask">',
@@ -80,27 +69,19 @@ define(function(require, exports, module) {
             },
 
             reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children(),
-                    
-                    $view,
+                var $view,
                     $mask,
 
                     vertical = this.vertical;
 
-                $data.detach();
-
-                $elem.html(this.template({
+                ZView.prototype.reset.call(this, {
                     vertical : vertical
-                }));
-                $elem.addClass('z_slider');
+                });
 
                 $view = this.$('.z_slider_view');
                 $mask = this.$('.z_slider_mask');
 
-                this.$data = $data;
                 this.$inner = $view;
-
                 this.$view = $view;
                 this.$mask = $mask;
 

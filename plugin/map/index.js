@@ -8,9 +8,6 @@ define(function(require, exports, module) {
 
 
     var // 引入百度地图api
-        // 已经使用cmd封装，可是百度地图的api回调
-        // 使用的是BMap这个全局变量，所以无法完全封装
-        // 万恶的百度
         bmap = require('tool/bmap'),
 
         Map = bmap.Map,
@@ -67,27 +64,14 @@ define(function(require, exports, module) {
 
 
     var ZSite = ZView.extend({
+            ztype : 'map_site',
+
             terminal : true,
 
             initialize : function(options) {
                 _.extend(this, _.pick(options, ['map', 'lat', 'lng', 'speed']));
 
                 ZView.prototype.initialize.call(this, options);
-            },
-
-            reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children();
-
-                $data.detach();
-
-                $elem.html(this.template({}));
-                $elem.addClass('z_map_site');
-
-                this.$data = $data;
-                this.$inner = $elem;
-
-                return this;
             },
 
             show : function(offset, zoom, silent) {
@@ -209,6 +193,8 @@ define(function(require, exports, module) {
         // map中的label是实际显示的
         // asset中的label只是用于模拟出map中label的宽高，以方便参数的设置
         ZMap = ZPanel.extend({
+            ztype : 'map',
+
             template : [
 
                 '<div class="z_map_view"></div>',
@@ -223,25 +209,17 @@ define(function(require, exports, module) {
             },
 
             reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children(),
-
-                    $view,
+                var $view,
                     $asset,
                     
                     map;
 
-                $data.detach();
-
-                $elem.html(this.template);
-                $elem.addClass('z_map');
+                ZView.prototype.reset.call(this);
 
                 $view = this.$('.z_map_view');
                 $asset = this.$('.z_map_asset');
 
-                this.$data = $data;
                 this.$inner = $asset;
-
                 this.$view = $view;
                 this.$asset = $asset;
 

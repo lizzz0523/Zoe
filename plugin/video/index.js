@@ -32,6 +32,8 @@ define(function(require, exports, module) {
 
 
     var ZTape = ZView.extend({
+            ztype : 'video_tape',
+
             terminal : true,
 
             template : _.template([
@@ -74,22 +76,13 @@ define(function(require, exports, module) {
             },
 
             reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children(),
-
-                    vendor = this.vendor,
+                var vendor = this.vendor,
                     video = this.video,
                     place = [ZTape.ID_PREFIX, vendor.name, video].join('_');
 
-                $data.detach();
-
-                $elem.html(this.template({
+                ZView.prototype.reset.call(this, {
                     place : place
-                }));
-                $elem.addClass('z_video_tape');
-
-                this.$data = $data;
-                this.$inner = $elem;
+                });
 
                 return this;
             },
@@ -153,11 +146,13 @@ define(function(require, exports, module) {
         }),
 
         ZVideo = ZPanel.extend({
-            template : [
+            ztype : 'video',
+
+            template : _.template([
 
                 '<div class="z_video_view"></div>'
 
-            ].join(''),
+            ].join('')),
 
             initialize : function(options) {
                 _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
@@ -166,21 +161,13 @@ define(function(require, exports, module) {
             },
 
             reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children(),
+                var $view;
 
-                    $view;
-
-                $data.detach();
-
-                $elem.html(this.template);
-                $elem.addClass('z_video');
+                ZView.prototype.reset.call(this);
 
                 $view = this.$('.z_video_view');
 
-                this.$data = $data;
                 this.$inner = $view;
-
                 this.$view = $view;
 
                 return this;

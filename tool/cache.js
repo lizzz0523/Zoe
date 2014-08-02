@@ -7,10 +7,10 @@ var _ = require('underscore');
 
 
 var hook = '_cache' + _.uniqueId(),
-    // 自增
-    cacheId = 1,
     
-    cache = [];
+    cache = [],
+    // 自增
+    cacheId = 1;
     
 function cacheData(key, value) {
     var id = this[hook],

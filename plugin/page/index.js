@@ -20,6 +20,8 @@ define(function(require, exports, module) {
 
 
     var ZPage = ZView.extend({
+            ztype : 'page',
+
             terminal : true,
 
             events : {
@@ -30,21 +32,6 @@ define(function(require, exports, module) {
                 _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
 
                 ZView.prototype.initialize.call(this, options);
-            },
-
-            reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children();
-
-                $data.detach();
-
-                $elem.html(this.template({}));
-                $elem.addClass('z_page');
-
-                this.$data = $data;
-                this.$inner = $elem;
-
-                return this;
             },
 
             render : function() {
@@ -103,6 +90,11 @@ define(function(require, exports, module) {
                 return page;
             },
 
+            updatePage : function(page) {
+                this.curPage = page;
+                this.trigger('update', this.curPage);
+            },
+
             active : function(page) {
                 var $pages = this.$('a'),
                     curPage = this.curPage;
@@ -113,8 +105,9 @@ define(function(require, exports, module) {
                 $pages.removeClass('active');
                 $pages.eq(page).addClass('active');
 
-                this.curPage = page;
-                this.trigger('update', this.curPage);
+                this.updatePage(page);
+
+                return this;
             },
 
             size : function() {

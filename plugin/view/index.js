@@ -14,6 +14,8 @@ define(function(require, exports, module) {
 
 
     var ZView = View.extend({
+            ztype : 'view',
+
             // terminal标志
             // 用于判断，数据的渲染，是由自身负责，还是交由子节点负责
             terminal : false,
@@ -23,7 +25,7 @@ define(function(require, exports, module) {
             template : _.template(''),
 
             initialize : function(options) {
-                _.extend(this, _.pick(options, ['zid', 'terminal', 'visible', 'template']));
+                _.extend(this, _.pick(options, ['zid', 'ztype', 'terminal', 'visible', 'template']));
 
                 // 当options包含data和属性
                 if (options.data) {
@@ -56,7 +58,7 @@ define(function(require, exports, module) {
                 return new Data(_.isArray(data) ? data : [data]);
             },
 
-            reset : function() {
+            reset : function(options) {
                 var $elem = this.$el,
                     $data = $elem.children();
 
@@ -67,8 +69,8 @@ define(function(require, exports, module) {
 
                 // 重新写入dom结构
                 // 并加入组件对应的类名
-                $elem.html(this.template({}));
-                $elem.addClass('z_view');
+                $elem.html(this.template(options || {}));
+                $elem.addClass(['z', this.ztype].join('_'));
 
                 // 缓存特殊dom节点
                 this.$data = $data;
@@ -102,7 +104,7 @@ define(function(require, exports, module) {
                     } else {
                         // ZView支持使用标签内元素进行配置
                         // 但需要先把元素stack到子节点的配置元素($items)里
-                        // 然后递归执行子节点的build方法
+                        // 然后递归执行子节点的render方法
                         _.each($data, function(elem) {
                             var item = new ZView();
 

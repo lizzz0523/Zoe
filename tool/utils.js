@@ -6,25 +6,25 @@ define(function(require, exports, module) {
 var _ = require('underscore');
 
 
-var slice = function(arr, start, end) {
-        return end != void 0
-        ? [].slice.call(arr, start, end)
-        : [].slice.call(arr, start);
-    },
+function slice(arr, start, end) {
+    return end != void 0
+    ? [].slice.call(arr, start, end)
+    : [].slice.call(arr, start);
+}
 
-    push = function(obj, key, value) {
-        // 如果push到某一key值的value不至一个
-        // 那么我们应该把他push到一个数组当中
-        
-        if (key in obj) {
-            obj[key].length == +obj[key].length || (obj[key] = [obj[key]]);
-            obj[key].push(value);
-        } else {
-            obj[key] = value;
-        }
+function push(obj, key, value) {
+    // 如果push到某一key值的value不至一个
+    // 那么我们应该把他push到一个数组当中
+    
+    if (key in obj) {
+        obj[key].length == +obj[key].length || (obj[key] = [obj[key]]);
+        obj[key].push(value);
+    } else {
+        obj[key] = value;
+    }
 
-        return obj;
-    };
+    return obj;
+}
 
 
 var utils = {
@@ -136,7 +136,6 @@ var rjsonclear = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u202
 
 _.extend(utils, {
     parseJSON : (function() {
-
         // 参考: http://json.org/json2.js
 
         function walk(key, list, reviver){

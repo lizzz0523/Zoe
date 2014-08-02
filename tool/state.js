@@ -33,23 +33,6 @@ function State(context, initial) {
     this._index = this._cacheState(initial || 'none');
 }
 
-State.create = function(context, options) {
-    var machine;
-
-    options = _.extend({}, options);
-    machine = new State(context, options.initial);
-
-    _.each(options.transits, function(transit) {
-        machine.add(transit.action, transit.prev, transit.next);
-    });
-
-    _.each(options.events, function(event) {
-        machine.on(event.name, event.callback);
-    });
-
-    return machine;
-};
-
 State.prototype = {
     version : 'zoe-state 0.0.1',
 
@@ -151,6 +134,25 @@ _.extend(State.prototype, {
     }
 });
 
+// 对外接口
+State.create = function(context, options) {
+    var machine;
+
+    options = _.extend({}, options);
+    machine = new State(context, options.initial);
+
+    _.each(options.transits, function(transit) {
+        machine.add(transit.action, transit.prev, transit.next);
+    });
+
+    _.each(options.events, function(event) {
+        machine.on(event.name, event.callback);
+    });
+
+    return machine;
+};
+
+// 全局有限状态机系统
 State.global = new State(window);
 
 _.each('add on off fire sync'.split(' '), function(value) {
