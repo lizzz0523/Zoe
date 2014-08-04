@@ -23,19 +23,20 @@ define(function(require, exports, module) {
             'height' : 300
         },
 
-        $root = $('html'),
-        $body = $('body'),
+        transform = client.support('csstransforms') && client.prefixed('transform'),
 
-        support = client.support('csstransforms'),
-        transform = client.prefixed('transform');
+        $root = $('html'),
+        $body = $('body');
 
 
     var ZPopBase = ZView.extend({
+            ztype : 'pop-base',
+
             terminal : true,
 
             visible : false,
 
-            template : [
+            template : _.template([
 
                 '<div class="z_pbase_layer">',
                     '<div class="z_pbase_fake"></div>',
@@ -46,38 +47,40 @@ define(function(require, exports, module) {
                     '<div class="z_pbase_view"></div>',
                 '</div>'
 
-            ].join(''),
+            ].join('')),
 
             initialize : function(options) {
-                _.extend(this, _.pick(options, ['speed']));
-
                 this.queue = queue(this);
 
                 ZView.prototype.initialize.call(this, options);
             },
 
             reset : function() {
-                var $elem = this.$el,
-                    $data = $elem.children(),
-
-                    $view,
+                var $view,
                     $fake,
                     $overlay,
                     $layer;
 
-                $data.detach();
-
-                $elem.html(this.template);
-                $elem.addClass('z_pop-base');
+                ZView.prototype.reset.call(this);
 
                 $view = this.$('.z_pbase_view');
                 $fake = this.$('.z_pbase_fake');
                 $overlay = this.$('.z_pbase_overlay');
                 $layer = this.$('.z_pbase_layer');
 
-                this.$data = $data;
-                this.$inner = $view;
+                // 模拟出body的外围环境
+                $fake.css({
+                    'margin'     : $body.css('margin'),
+                    'padding'    : $body.css('padding'),
+                    'border'     : $body.css('border'),
+                    'background' : $body.css('background'),
+                    'color'      : $body.css('color'),
+                    'font'       : $body.css('font'),
+                });
 
+                $view.hide();
+
+                this.$inner = $view;
                 this.$view = $view;
                 this.$fake = $fake;
                 this.$overlay = $overlay;
@@ -88,39 +91,61 @@ define(function(require, exports, module) {
 
             wrap : function() {
                 var $elem = this.$el,
-                    $fake = this.$fake;
+                    $fake = this.$fake,
+                    $scripts = $body.find('script'),
 
-                $fake.css({
-                    'margin'  : $body.css('margin'),
-                    'padding' : $body.css('padding')
-                });
+                    // 获取当前body的滚动条状态
+                    scroll = $body.scrollTop();
 
-                $body.find('script').each(function() {
+                // 使页面的script标签失效
+                // 以免调用$.fn.prepend方法时，重新执行
+                $scripts.each(function() {
                     var $script = $(this);
 
                     $script.data('type', $script.attr('type'));
                     $script.attr('type', 'text/disabled');
                 });
 
+                // 在页面中嵌入pop-base
                 $fake.prepend($body.children());
                 $body.prepend($elem);
 
+                // 重新恢复script标签
+                $scripts.each(function() {
+                    var $script = $(this);
+
+                    $script.attr('type', $script.data('type'));
+                    $script.removeData('type');
+                });
+
                 $root.addClass('z_html-popup');
                 $body.addClass('z_body-popup');
+
+                $fake.parent().scrollTop(scroll);
             },
 
             unwrap : function() {
                 var $elem = this.$el,
-                    $fake = this.$fake;
+                    $fake = this.$fake,
+                    $scripts = $fake.find('script'),
 
-                $fake.css({
-                    'margin'  : 0,
-                    'padding' : 0
+                    // 获取当前body的滚动条状态
+                    scroll = $fake.parent().scrollTop();
+
+                // 使页面的script标签失效
+                // 以免调用$.fn.prepend方法时，重新执行
+                $scripts.each(function() {
+                    var $script = $(this);
+
+                    $script.data('type', $script.attr('type'));
+                    $script.attr('type', 'text/disabled');
                 });
 
+                // 在页面中抽出pop-base
                 $body.prepend($fake.children());
                 $elem.detach();
 
+                // 重新恢复script标签
                 $body.find('script').each(function() {
                     var $script = $(this);
 
@@ -130,6 +155,8 @@ define(function(require, exports, module) {
 
                 $root.removeClass('z_html-popup');
                 $body.removeClass('z_body-popup');
+
+                $body.scrollTop(scroll);
             },
 
             show : function() {
@@ -138,43 +165,56 @@ define(function(require, exports, module) {
                     $overlay = this.$overlay,
 
                     queue = this.queue,
-                    qname = 'popup',
+                    qname = 'show',
 
                     visible = this.visible;
 
                 if (!visible) {
                     queue.add(qname, function() {
                         this.wrap();
-                        queue.next(qname);
+
+                        // 等待浏览器渲染
+                        _.defer(function() {
+                            queue.next(qname);
+                        });
                     });
 
-                    if (support) {
+                    if (transform) {
+                        // 如果浏览器支持transform
+                        // 则使用css3执行动画
                         queue.add(qname, function() {
-                            _.defer(function() {
+                            var top = $layer.length - 1,
+                                deep,
+                                scale,
+                                opacity
+                                style = {};
+
+                            $layer.each(function(index) {
+                                deep = top - index;
+                                scale = 1 - deep * 0.05;
+                                opacity = (index == top) ? 1 : 1 / top;
+
+                                style[transform] = 'scale(' + scale + ')';
+                                style['opacity'] = opacity;
+
+                                $(this).css(style);
+                            });
+
+                            $overlay.css('opacity', 1);
+
+                            _.delay(function() {
+                                queue.next(qname);
+                            }, 300);
+                        });
+                    } else {
+                        // 如果浏览器不支持transform
+                        // 则降级为jquery的动画
+                        queue.add(qname, function() {
+                            $overlay.fadeTo(1, 300, function() {
                                 queue.next(qname);
                             });
                         });
-
-                        queue.add(qname, function() {
-                            var total = $layer.length - 1,
-                                deep,
-                                scale;
-
-                            $layer.each(function(index) {
-                                deep = total - index;
-                                scale = 1 - deep * 0.05;
-
-                                $(this).css(transform, 'scale(' + scale + ')');
-                            });
-
-                            queue.next(qname);
-                        });
                     }
-
-                    queue.add(qname, function() {
-                        $overlay.css('opacity', 1);
-                        queue.next(qname);
-                    });
 
                     queue.next(qname);
                 }
@@ -190,36 +230,43 @@ define(function(require, exports, module) {
                     $overlay = this.$overlay,
 
                     queue = this.queue,
-                    qname = 'popup',
+                    qname = 'hide',
 
                     visible = this.visible;
 
                 if (visible) {
-                    queue.add(qname, function() {
-                        $overlay.css('opacity', 0);
-                        queue.next(qname);
-                    });
-
-                    if (support) {
+                    if (transform) {
                         queue.add(qname, function() {
+                            var style = {};
+
+                            style[transform] = 'scale(1)';
+                            style['opacity'] = 1;
+
                             $layer.each(function(index) {
-                                $(this).css(transform, 'scale(1)');
+                                $(this).css(style);
                             });
+
                             $overlay.css('opacity', 0);
 
-                            queue.next(qname);
-                        });
-
-                        queue.add(qname, function() {
                             _.delay(function() {
                                 queue.next(qname);
                             }, 300);
+                        });
+                    } else {
+                        queue.add(qname, function() {
+                            $overlay.fadeTo(0, 300, function() {
+                                queue.next(qname);
+                            });
                         });
                     }
 
                     queue.add(qname, function() {
                         this.unwrap();
-                        queue.next(qname);
+
+                        // 等待浏览器渲染
+                        _.defer(function() {
+                            queue.next(qname);
+                        });
                     });
 
                     queue.next(qname);
@@ -230,8 +277,15 @@ define(function(require, exports, module) {
                 return this;
             },
 
-            pop : function(view) {
-                
+            pop : function(popWin) {
+                var queue = this.queue,
+                    qname = 'pop';
+
+                this.append(popWin.el);
+
+                if (transform) {
+                    
+                }
             }
         }, {
             instance : null,
