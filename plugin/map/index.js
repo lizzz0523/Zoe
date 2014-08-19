@@ -195,12 +195,14 @@ define(function(require, exports, module) {
         ZMap = ZPanel.extend({
             ztype : 'map',
 
-            template : [
+            template : _.template([
 
-                '<div class="z_map_view"></div>',
-                '<div class="z_map_asset"></div>'
+                '<div class="z_map_mask">',
+                    '<div class="z_map_view"></div>',
+                    '<div class="z_map_asset"></div>',
+                '</div>'
 
-            ].join(''),
+            ].join('')),
 
             initialize : function(options) {
                 _.extend(this, _.pick(options = _.defaults(options, defaults), _.keys(defaults)));
