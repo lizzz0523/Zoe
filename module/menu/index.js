@@ -13,7 +13,8 @@ var utils = require('tool/utils'),
 
 var defaults = {
         'tmpl'    : _.template('<a href="#<%= target %>"><%= text %></a>'),
-        'pattern' : false,       
+        'pattern' : false,
+        'hover'   : false, // 控制鼠标滑过是否激活控件
         'repeat'  : false, //重复标志，由于现实按钮能否重复点击
         'init'    : ''
     };
@@ -25,7 +26,8 @@ var ZMenu = ZView.extend({
         terminal : true,
 
         events : {
-            'click a' : 'clickTab'
+            'click a' : 'clickTab',
+            'mouseenter a' : 'hoverTab'
         },
 
         initialize : function(options) {
@@ -100,6 +102,11 @@ var ZMenu = ZView.extend({
 
         current : function() {
             return this.curTab;
+        },
+
+        hoverTab : function(event) {
+            if (!this.hover) return;
+            return this.clickTab(event);
         },
 
         clickTab : function(event) {
