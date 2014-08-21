@@ -7,43 +7,6 @@ var cache = require('tool/cache'),
     _ = require('underscore');
 
 
-var requestAnimFrame = window.requestAnimationFrame,
-    cancelAnimFrame = window.cancelAnimationFrame || window.cancelRequestAnimationFrame,
-
-    requestId;
-
-(function() {
-
-    var vendors = ' ms moz webkit o'.split(' '),
-        i = 0,
-        len = vendors.length;
-
-    for (; i < len && !requestAnimFrame; i++) {
-        requestAnimFrame = window[vendors[i] + 'RequestAnimationFrame'];
-        cancelAnimFrame = window[vendors[i] + 'CancelAnimationFrame'] || window[vendors[i] + 'CancelRequestAnimationFrame'];
-    }
-
-    requestAnimFrame || (requestAnimFrame = function(callback) {
-        return window.setTimeout(callback, 1000 / 60);
-    });
-
-    cancelAnimFrame || (cancelAnimFrame = function(requestId) {
-        return window.clearTimeout(requestId);
-    });
-
-})();
-
-function start() {
-    requestId = requestAnimFrame(arguments.callee);
-    Event.ticker.tick();
-}
-
-function stop() {
-    cancelAnimFrame(requestId);
-    requestId = void 0;
-}
-
-
 var settings = {
         CACHE : 'events'
     },
@@ -174,7 +137,9 @@ _.extend(Event.prototype, {
     }
 });
 
+
 // 对外接口
+
 Event.create = function(context) {
     return new Event(context);
 };
@@ -188,8 +153,46 @@ _.each('on one off emit'.split(' '), function(value) {
     };
 });
 
+
 // 计时器
+
 Event.ticker = [];
+
+var requestAnimFrame = window.requestAnimationFrame,
+    cancelAnimFrame = window.cancelAnimationFrame || window.cancelRequestAnimationFrame,
+
+    requestId;
+
+(function() {
+
+    var vendors = ' ms moz webkit o'.split(' '),
+        i = 0,
+        len = vendors.length;
+
+    for (; i < len && !requestAnimFrame; i++) {
+        requestAnimFrame = window[vendors[i] + 'RequestAnimationFrame'];
+        cancelAnimFrame = window[vendors[i] + 'CancelAnimationFrame'] || window[vendors[i] + 'CancelRequestAnimationFrame'];
+    }
+
+    requestAnimFrame || (requestAnimFrame = function(callback) {
+        return window.setTimeout(callback, 1000 / 60);
+    });
+
+    cancelAnimFrame || (cancelAnimFrame = function(requestId) {
+        return window.clearTimeout(requestId);
+    });
+
+})();
+
+function start() {
+    requestId = requestAnimFrame(arguments.callee);
+    Event.ticker.tick();
+}
+
+function stop() {
+    cancelAnimFrame(requestId);
+    requestId = void 0;
+}
 
 _.extend(Event.ticker, {
     join : function(runner) {

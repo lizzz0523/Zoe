@@ -68,7 +68,9 @@ _.extend(Queue.prototype, {
     }
 });
 
+
 // 对外接口
+
 Queue.create = function(context) {
     return new Queue(context);
 };

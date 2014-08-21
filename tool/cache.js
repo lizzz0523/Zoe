@@ -64,6 +64,8 @@ function removeData(key) {
 
 
 module.exports = {
+    version : 'zoe-cache 0.0.1',
+
     get : function(context, key) {
         return cacheData.call(context, key);
     },

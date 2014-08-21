@@ -34,7 +34,7 @@ _.extend(zoe, {
 _.extend(zoe, {
     _views : {},
 
-    zuid : 1,
+    _zuid : 1,
 
     find : function(viewId) {
         if (zoe._views[viewId]) {
@@ -64,7 +64,7 @@ _.each('on one off emit'.split(' '), function(method) {
 
 
 _.extend(zoe, {
-    _tpath : 'plugin/{s}/index.js',
+    _tpath : 'module/{s}/index.js',
 
     use : function(plugins, callback) {
         var args = [],
@@ -259,7 +259,7 @@ $('[data-zoe]').each(function(index, elem) {
         options;
 
     if (!viewId) {
-        $elem.data('id', viewId = 'z_view-' + zoe.zuid++);
+        $elem.data('id', viewId = 'z_view-' + zoe._zuid++);
     }
       
     if (!zoe.find(viewId)) {

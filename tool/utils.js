@@ -106,10 +106,10 @@ _.extend(utils, {
         });
     },
 
-    camelCase : function(str){
+    camelCase : function(str) {
         if (str == null) return '';
 
-        return String(str).replace(rcamelCase, function(all, first){
+        return String(str).replace(rcamelCase, function(all, first) {
             return first.toUpperCase();
         });
     }

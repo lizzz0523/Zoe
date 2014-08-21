@@ -11,7 +11,10 @@ var client = {
     };
 
 
-var doc = document,
+// 检测浏览器的宽高
+
+var nav = navigator,
+    doc = document,
     root = doc.documentElement,
     body = doc.body;
 
@@ -20,6 +23,49 @@ _.extend(client, {
     height : root.offsetHeight + 2 * root.clientTop
 });
 
+
+// 检测浏览器的厂商，以及版本号
+
+function uaMatch(ua) {
+    ua = ua.toLowerCase();
+
+    var match = /(chrome)[ \/]([\w.]+)/.exec(ua) ||
+        /(webkit)[ \/]([\w.]+)/.exec(ua) ||
+        /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) ||
+        /(msie) ([\w.]+)/.exec(ua) ||
+        ua.indexOf('compatible') < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) ||
+        [];
+
+    return {
+        browser: match[1] || '',
+        version: match[2] || '0'
+    };
+}
+
+_.extend(client, {
+    agent : (function() {
+
+        var matched = uaMatch(nav.userAgent);
+            browser = {};
+
+        if (matched.browser) {
+            browser[matched.browser] = true;
+            browser['version'] = matched.version;
+        }
+
+        if (browser.chrome) {
+            browser.webkit = true;
+        } else if (browser.webkit) {
+            browser.safari = true;
+        }
+
+        return browser;
+
+    })()
+});
+
+
+// 检测浏览器css特性
 
 /* Modernizr 2.8.3 (Custom Build) | MIT & BSD
  * Build: http://modernizr.com/download/#-fontface-backgroundsize-borderimage-borderradius-boxshadow-flexbox-flexboxlegacy-hsla-multiplebgs-opacity-rgba-textshadow-cssanimations-csscolumns-generatedcontent-cssgradients-cssreflections-csstransforms-csstransforms3d-csstransitions-applicationcache-canvas-canvastext-draganddrop-hashchange-history-audio-video-indexeddb-input-inputtypes-localstorage-postmessage-sessionstorage-websockets-websqldatabase-webworkers-geolocation-inlinesvg-smil-svg-svgclippaths-touch-webgl-prefixed-teststyles-testprop-testallprops-hasevent-prefixes-domprefixes

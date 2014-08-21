@@ -134,7 +134,9 @@ _.extend(State.prototype, {
     }
 });
 
+
 // 对外接口
+
 State.create = function(context, options) {
     var machine;
 

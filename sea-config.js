@@ -7,6 +7,7 @@ seajs.config({
     },
 
     paths : {
+        'module' : 'module',
         'plugin' : 'plugin',
         'toop' : 'tool'
     },
