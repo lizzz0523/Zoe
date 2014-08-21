@@ -25,10 +25,11 @@ var doc = document,
 
     sheet;
 
+style.type = 'text/css';
 style.id = styleId;
 head.appendChild(style);
 
-sheet = (function() {
+sheet = style.sheet || (function() {
     var sheets = [].slice.call(doc.styleSheets, 0);
     
     return _.find(sheets, function(sheet) {
@@ -57,7 +58,7 @@ module.exports = {
     },
 
     remove : function(selector) {
-        var rules = sheet.cssRules || sheet.rules;
+        var rules = [].slice.call(sheet.cssRules || sheet.rules, 0);
 
         _.each(rules, function(rule, index) {
             if (rule.selectorText !== selector) return;
