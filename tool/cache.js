@@ -1,6 +1,15 @@
 // 数据缓存系统
 // by lizzz (http://lizzz0523.github.io/)
 
+/*
+ * todo list
+ *
+ * 1、添加数据堆栈，已经数据量阈值，一旦数据量过多导致堆栈溢出，先删去那些不常用的数据
+ * 2、数据补偿，数据被溢出的时候，当数据再次被访问的时候，给出补偿方案
+ * 3、内存泄露主要来自于dom上绑定的数据，在dom废弃时无法释放，而对于一般的对象不用刻意把数据保存在cache系统中
+ *
+ */
+
 define(function(require, exports, module) {
 
 var _ = require('underscore');
@@ -64,8 +73,6 @@ function removeData(key) {
 
 
 module.exports = {
-    version : 'zoe-cache 0.0.1',
-
     get : function(context, key) {
         return cacheData.call(context, key);
     },

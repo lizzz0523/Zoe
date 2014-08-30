@@ -3,18 +3,8 @@
 
 define(function(require, exports, module) {
 
-var _ = require('underscore');
-
-
-var rdashCase = /([\dA-Z])/g;
-
-function dashCase(str) {
-    if (str == null) return '';
-
-    return String(str).replace(rdashCase, function(all, first) {
-        return '-' + first.toLowerCase();
-    });
-}
+var utils = require('tool/utils'),
+    _ = require('underscore');
 
 
 var doc = document,
@@ -39,13 +29,11 @@ sheet = style.sheet || (function() {
 
 
 module.exports = {
-    version : 'zoe-style 0.0.1',
-
     insert : function(selector, rules) {
         var ruleText = '';
 
         _.each(rules, function(value, name) {
-            ruleText += dashCase(name) + ':' + value + ';';
+            ruleText += utils.dashCase(name) + ':' + value + ';';
         });
 
         ruleText = selector + '{' + ruleText + '}';

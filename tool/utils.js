@@ -28,8 +28,6 @@ function push(obj, key, value) {
 
 
 var utils = {
-    version : 'zoe-utils 0.0.1',
-
     guid : function() {
         var d = new Date().getTime(), r;
 
@@ -48,6 +46,7 @@ var rtrim = /^\s+|\s+$/g,
     rdecode = /&(?:amp|lt|gt|quot|#39);/g,
     rescape = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
     rcamelCase = /-([\da-z])/gi,
+    rdashCase = /([\dA-Z])/g,
 
     mencode = {
         '<'  : '&lt;',
@@ -111,6 +110,14 @@ _.extend(utils, {
 
         return String(str).replace(rcamelCase, function(all, first) {
             return first.toUpperCase();
+        });
+    },
+
+    dashCase : function(str) {
+        if (str == null) return '';
+
+        return String(str).replace(rdashCase, function(all, first) {
+            return '-' + first.toLowerCase();
         });
     }
 });

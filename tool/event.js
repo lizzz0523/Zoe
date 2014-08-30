@@ -1,6 +1,15 @@
 // 事件系统
 // by lizzz (http://lizzz0523.github.io/)
 
+/*
+ * todo list
+ *
+ * 1、添加多事件添加（用空格分开）
+ * 2、添加事件名字空间
+ * 3、添加对dom对象的事件绑定支持
+ *
+ */
+
 define(function(require, exports, module) {
 
 var cache = require('tool/cache'),
@@ -41,10 +50,6 @@ function Event(context) {
 }
 
 Event.prototype = {
-    version : 'zoe-event 0.0.1'
-};
-
-_.extend(Event.prototype, {
     on : function(name, callback) {
         var events = cache.get(this, settings.CACHE),
             handlers = events[name] || (events[name] = []);
@@ -135,7 +140,7 @@ _.extend(Event.prototype, {
             trigger(handler.context, handler.callback, arguments);
         }
     }
-});
+};
 
 
 // 对外接口
@@ -144,7 +149,9 @@ Event.create = function(context) {
     return new Event(context);
 };
 
+
 // 全局事件收发
+
 Event.global = new Event(window);
 
 _.each('on one off emit'.split(' '), function(value) {

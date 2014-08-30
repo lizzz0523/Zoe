@@ -18,10 +18,6 @@ function Queue(context) {
 }
 
 Queue.prototype = {
-    version : 'zoe-queue 0.0.1'
-};
-
-_.extend(Queue.prototype, {
     add : function(name, callback) {
         var queues = cache.get(this, settings.CACHE),
             players = queues[name] || (queues[name] = []);
@@ -66,7 +62,7 @@ _.extend(Queue.prototype, {
 
         return players ? players.length : 0;
     }
-});
+};
 
 
 // 对外接口
@@ -75,7 +71,9 @@ Queue.create = function(context) {
     return new Queue(context);
 };
 
+
 // 全局列队系统
+
 Queue.global = new Queue(window);
 
 _.each('add next clear size'.split(' '), function(value) {

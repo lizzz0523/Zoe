@@ -1,11 +1,11 @@
 define(function(require, exports, module) {
 
     window.zoe = require('zoe');
-    window.client = require('tool/clent');
-    window.event = require('tool/event');
-    window.queue = require('tool/queue');
-    window.state = require('tool/state');
-    window.style = require('tool/style');
+    window.zclient = require('tool/client');
+    window.zevent = require('tool/event');
+    window.zqueue = require('tool/queue');
+    window.zstate = require('tool/state');
+    window.zstyle = require('tool/style');
 
 
     var elem;

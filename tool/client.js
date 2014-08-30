@@ -6,9 +6,7 @@ define(function(require, exports, module) {
 var _ = require('underscore');
 
 
-var client = {
-        version : 'zoe-client 0.0.1'
-    };
+var client = { };
 
 
 // 检测浏览器的宽高
