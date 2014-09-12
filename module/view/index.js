@@ -25,7 +25,7 @@ var ZView = View.extend({
         template : _.template(''),
 
         initialize : function(options) {
-            _.extend(this, _.pick(options, ['zid', 'ztype', 'terminal', 'visible', 'template']));
+            _.extend(this, _.pick(options, ['zid', 'ztype', 'terminal', 'visible']));
 
             // 当options包含data和属性
             if (options.data) {

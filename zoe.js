@@ -100,7 +100,7 @@ var inited,
         });
     },
 
-    rdata = /^([^\[]+)(\[[\w\s\-$,=\[\]]*\])?(?:[^\]]*)$/,
+    rdata = /^([^\[]+)(\[[\w\s\-\.$,=\[\]]*\])?(?:[^\]]*)$/,
 
     parseData = function(str) {
         var data = String(str).match(rdata);
