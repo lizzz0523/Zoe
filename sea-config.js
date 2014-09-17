@@ -9,7 +9,7 @@ seajs.config({
     paths : {
         'module' : 'module',
         'plugin' : 'plugin',
-        'toop' : 'tool'
+        'tool' : 'tool'
     },
 
     // 文件编码
