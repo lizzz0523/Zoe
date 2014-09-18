@@ -21,11 +21,9 @@ function zoe(selector) {
 _.extend(zoe, {
     version : 'zoe 0.0.1',
 
-    log : console && console.log
-    ? function() {
+    log : console && console.log ? function() {
         console.log.apply(console, arguments);
-    }
-    : function() {
+    } : function() {
         // do nothing
     }
 });

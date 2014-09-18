@@ -86,7 +86,7 @@ State.prototype = {
 
             prev = {
                 index : this._index,
-                state : this._getState(),
+                state : this._getState()
             },
             next = {};
 

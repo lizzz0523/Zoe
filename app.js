@@ -5,7 +5,7 @@ define(function(require, exports, module) {
     window.zevent = require('tool/event');
     window.zqueue = require('tool/queue');
     window.zstate = require('tool/state');
-    window.zstyle = require('tool/style');
+    // window.zstyle = require('tool/style');
 
 
     var elem;

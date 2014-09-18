@@ -7,8 +7,8 @@ var utils = require('tool/utils'),
     _ = require('underscore');
 
 
-var doc = document,
-    head = doc.head,
+var doc = window.document,
+    head = doc.head || doc.getElementsByTagName('head')[0],
 
     style = doc.createElement('style'),
     styleId = 'zoe-style',
