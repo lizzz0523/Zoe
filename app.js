@@ -25,7 +25,7 @@ define(function(require, exports, module) {
 
             setTimeout(function() {
                 game.start();
-            }, 1000);
+            }, 1243000);
         });
     }
     
